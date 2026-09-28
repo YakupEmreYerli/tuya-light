@@ -7,6 +7,7 @@ ranges (10-1000, 0-255, hex colour strings) stay inside this module.
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass
 
 import tinytuya
@@ -38,6 +39,9 @@ class State:
 
 
 def _clamp(x: float, lo: int, hi: int) -> int:
+    x = float(x)
+    if not math.isfinite(x):
+        raise LightError(f"not a usable number: {x}")
     return int(max(lo, min(hi, round(x))))
 
 
@@ -133,6 +137,15 @@ class Light:
         if isinstance(result, dict) and result.get("Error"):
             raise LightError(str(result["Error"]))
 
+    def _min_brightness(self) -> int:
+        """Lowest percentage the bulb accepts: older bulbs start at 25/255 (10 %),
+        newer ones at 10/1000 (1 %). tinytuya raises below it."""
+        dpset = getattr(self.bulb, "dpset", None) or {}
+        low, high = dpset.get("value_min"), dpset.get("value_max")
+        if isinstance(low, (int, float)) and isinstance(high, (int, float)) and high > 0 and low > 0:
+            return max(1, math.ceil(low * 100 / high))
+        return 1
+
     def power(self, on: bool) -> None:
         self._check(self.bulb.turn_on() if on else self.bulb.turn_off())
 
@@ -140,19 +153,23 @@ class Light:
         self.power(not self.state().on)
 
     def colour(self, hue: float, saturation: float, value: float) -> None:
-        h = (hue % 360) / 360.0
+        h = (_clamp(hue, -100_000, 100_000) % 360) / 360.0
         s = _clamp(saturation, 0, 100) / 100.0
         v = max(1, _clamp(value, 0, 100)) / 100.0
         self._ensure_on()
-        self._check(self.bulb.set_hsv(h, s, v))
+        try:
+            self._check(self.bulb.set_hsv(h, s, v))
+        except ValueError as err:
+            raise LightError(str(err)) from None
 
     def white(self, brightness: float, temperature: float) -> None:
+        bright = _clamp(brightness, 0, 100)
+        temp = _clamp(temperature, 0, 100)
         self._ensure_on()
-        self._check(
-            self.bulb.set_white_percentage(
-                max(1, _clamp(brightness, 0, 100)), _clamp(temperature, 0, 100)
-            )
-        )
+        try:
+            self._check(self.bulb.set_white_percentage(max(self._min_brightness(), bright), temp))
+        except ValueError as err:
+            raise LightError(str(err)) from None
 
     def brightness(self, percent: float) -> None:
         """Dim without changing mode: white stays white, colour keeps its hue."""

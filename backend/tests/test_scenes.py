@@ -82,3 +82,35 @@ def test_cli_scene_save_white_and_hue_sat(capsys):
     cli.main(["--json", "scene-save", "Teal", "--colour", "180 60"])
     out = json.loads(capsys.readouterr().out)
     assert (out["hue"], out["saturation"]) == (180, 60)
+
+
+def test_reset_refuses_own_scene_and_keeps_it():
+    store.save("Mine", "white")
+    with pytest.raises(ConfigError):
+        store.reset("mine")
+    assert store.get("mine").label == "Mine"
+
+
+def test_non_numbers_are_refused():
+    with pytest.raises(ConfigError):
+        store.save("X", "white", brightness=float("nan"))
+    with pytest.raises(ConfigError):
+        store.save("X", "white", brightness="bright")
+
+
+def test_scene_file_is_private_and_no_temp_left(scenes_file):
+    store.save("Mine", "white")
+    assert oct(scenes_file.stat().st_mode & 0o777) == "0o600"
+    assert [p.name for p in scenes_file.parent.iterdir() if p.suffix == ".tmp"] == []
+
+
+def test_parallel_saves_all_survive(tmp_path, monkeypatch):
+    import multiprocessing as mp
+    ctx = mp.get_context("fork")
+    procs = [ctx.Process(target=store.save, args=(f"S{i}", "white")) for i in range(8)]
+    for p in procs:
+        p.start()
+    for p in procs:
+        p.join()
+    names = {s.name for s in store.load()}
+    assert {f"s{i}" for i in range(8)} <= names

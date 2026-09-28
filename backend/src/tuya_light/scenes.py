@@ -9,14 +9,16 @@ assistant too.
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import re
 import unicodedata
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from .config import ConfigError, config_path
+from .config import ConfigError, config_path, write_private
 
 
 @dataclass(frozen=True)
@@ -61,7 +63,13 @@ def slug(label: str) -> str:
 
 
 def _clamp(v, lo: int, hi: int) -> int:
-    return int(max(lo, min(hi, round(float(v)))))
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        raise ConfigError(f"not a number: {v!r}") from None
+    if x != x or x in (float("inf"), float("-inf")):
+        raise ConfigError(f"not a usable number: {v!r}")
+    return int(max(lo, min(hi, round(x))))
 
 
 def _clean(raw: dict) -> dict:
@@ -80,19 +88,31 @@ def _read_overrides(path: Path) -> list[dict]:
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as err:
         raise ConfigError(f"{path} is not valid JSON: {err}") from None
+    except (OSError, UnicodeDecodeError) as err:
+        raise ConfigError(f"cannot read {path}: {err}") from None
     if not isinstance(data, list):
         raise ConfigError(f"{path} must contain a JSON list of scenes")
     return [d for d in data if isinstance(d, dict) and d.get("name")]
 
 
 def _write_overrides(entries: list[dict], path: Path) -> None:
+    write_private(path, json.dumps(entries, indent=2, ensure_ascii=False) + "\n")
+
+
+@contextmanager
+def _locked(path: Path):
+    """Serialise read-modify-write between the CLI, the MCP server and the
+    widget, which may all edit scenes at the same moment."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(entries, indent=2, ensure_ascii=False) + "\n")
-    tmp.replace(path)
+    with open(path.with_name(path.name + ".lock"), "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
 
 
 def load(include_hidden: bool = False, path: Path | None = None) -> list[Scene]:
@@ -124,23 +144,25 @@ def save(label: str, mode: str, *, name: str | None = None, brightness: float = 
         "label": label, "mode": mode, "brightness": brightness, "temperature": temperature,
         "hue": hue, "saturation": saturation, "hidden": False,
     })}
-    entries = [e for e in _read_overrides(path) if e["name"] != key]
-    entries.append(entry)
-    _write_overrides(entries, path)
+    with _locked(path):
+        entries = [e for e in _read_overrides(path) if e["name"] != key]
+        entries.append(entry)
+        _write_overrides(entries, path)
     return get(key, path)
 
 
 def set_hidden(name: str, hidden: bool, path: Path | None = None) -> Scene:
     path = path or scenes_path()
     scene = get(name, path)
-    entries = _read_overrides(path)
-    for e in entries:
-        if e["name"] == scene.name:
-            e["hidden"] = hidden
-            break
-    else:
-        entries.append({"name": scene.name, "hidden": hidden})
-    _write_overrides(entries, path)
+    with _locked(path):
+        entries = _read_overrides(path)
+        for e in entries:
+            if e["name"] == scene.name:
+                e["hidden"] = hidden
+                break
+        else:
+            entries.append({"name": scene.name, "hidden": hidden})
+        _write_overrides(entries, path)
     return get(scene.name, path)
 
 
@@ -151,15 +173,23 @@ def remove(name: str, path: Path | None = None) -> str:
     if scene.builtin:
         set_hidden(scene.name, True, path)
         return "hidden"
-    _write_overrides([e for e in _read_overrides(path) if e["name"] != scene.name], path)
+    with _locked(path):
+        _write_overrides([e for e in _read_overrides(path) if e["name"] != scene.name], path)
     return "removed"
 
 
 def reset(name: str | None = None, path: Path | None = None) -> None:
     """Restore one built-in scene (or all of them) to its original form."""
     path = path or scenes_path()
-    if name is None:
-        keep = [e for e in _read_overrides(path) if e["name"] not in _BUILTIN_BY_NAME]
-    else:
-        keep = [e for e in _read_overrides(path) if e["name"] != name]
-    _write_overrides(keep, path)
+    if name is not None:
+        scene = get(name, path)
+        if not scene.builtin:
+            raise ConfigError(f"{scene.name!r} is your own scene, not a built-in one; "
+                              "use scene-remove to delete it")
+        name = scene.name
+    with _locked(path):
+        if name is None:
+            keep = [e for e in _read_overrides(path) if e["name"] not in _BUILTIN_BY_NAME]
+        else:
+            keep = [e for e in _read_overrides(path) if e["name"] != name]
+        _write_overrides(keep, path)

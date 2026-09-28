@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 
 from . import __version__, config
@@ -18,6 +19,23 @@ NAMED_COLOURS = {
     "red": 0, "orange": 30, "yellow": 55, "green": 120, "cyan": 180,
     "blue": 230, "purple": 275, "pink": 320,
 }
+
+
+def _number(text: str) -> float:
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a number: {text!r}") from None
+    if not math.isfinite(value):
+        raise argparse.ArgumentTypeError(f"not a usable number: {text!r}")
+    return value
+
+
+def _arg_number(text: str) -> float:
+    try:
+        return _number(text)
+    except argparse.ArgumentTypeError as err:
+        raise SystemExit(f"tuya-light: {err}") from None
 
 
 def _hex_to_hsv(text: str) -> tuple[float, float, float]:
@@ -81,15 +99,15 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("spec", nargs="+")
 
     w = sub.add_parser("white", help="white light: brightness and temperature, 0-100")
-    w.add_argument("brightness", type=float)
-    w.add_argument("temperature", type=float, nargs="?", default=None,
+    w.add_argument("brightness", type=_number)
+    w.add_argument("temperature", type=_number, nargs="?", default=None,
                    help="0 warm .. 100 cool (default: keep)")
 
     b = sub.add_parser("brightness", help="0-100, keeps the current mode and colour")
-    b.add_argument("percent", type=float)
+    b.add_argument("percent", type=_number)
 
     t = sub.add_parser("temperature", help="0 warm .. 100 cool, switches to white")
-    t.add_argument("percent", type=float)
+    t.add_argument("percent", type=_number)
 
     sc = sub.add_parser("scene", help="apply a scene (see `scenes`)")
     sc.add_argument("name")
@@ -100,11 +118,11 @@ def build_parser() -> argparse.ArgumentParser:
     kind = ss.add_mutually_exclusive_group(required=True)
     kind.add_argument("--colour", "--color", dest="colour", metavar="SPEC",
                       help="a colour name, #rrggbb, or 'H S' (hue saturation)")
-    kind.add_argument("--white", type=float, metavar="TEMPERATURE",
+    kind.add_argument("--white", type=_number, metavar="TEMPERATURE",
                       help="white light, 0 warm .. 100 cool")
     kind.add_argument("--current", action="store_true",
                       help="whatever the light shows right now")
-    ss.add_argument("--brightness", type=float, default=None, help="0-100 (default 100)")
+    ss.add_argument("--brightness", type=_number, default=None, help="0-100 (default 100)")
 
     for cmd, text in (("scene-remove", "delete your scene, or hide a built-in one"),
                       ("scene-hide", "hide a scene from lists and the widget"),
@@ -127,7 +145,7 @@ def _edit_scenes(args: argparse.Namespace) -> int:
         if args.colour is not None:
             parts = args.colour.split()
             if len(parts) == 2:
-                hue, sat = (float(x) for x in parts)
+                hue, sat = (_arg_number(x) for x in parts)
             else:
                 hue, sat, _ = _parse_colour(args.colour)
             saved = scene_store.save(args.label, "colour", name=args.name, hue=hue,
@@ -193,7 +211,7 @@ def run(args: argparse.Namespace) -> int:
             light.toggle()
         elif args.cmd in ("colour", "color"):
             if len(args.spec) == 3:
-                light.colour(*(float(x) for x in args.spec))
+                light.colour(*(_arg_number(x) for x in args.spec))
             elif len(args.spec) == 1:
                 light.colour(*_parse_colour(args.spec[0]))
             else:

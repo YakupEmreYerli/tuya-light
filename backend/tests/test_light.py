@@ -193,3 +193,55 @@ def test_partial_push_is_merged_with_next_reply(fake, monkeypatch):
     monkeypatch.setattr(fake, "status", lambda: next(replies))
     s = Light(dev()).state()
     assert s.online and s.brightness == 50 and s.temperature == 8
+
+
+def test_loose_key_file_is_tightened(tmp_path, capsys):
+    path = tmp_path / "devices.json"
+    path.write_text(json.dumps([{"id": "x", "key": "k"}]))
+    path.chmod(0o644)
+    config.load(path)
+    assert oct(path.stat().st_mode & 0o777) == "0o600"
+    assert "0600" in capsys.readouterr().err
+
+
+def test_save_ignores_a_stale_loose_temp_file(tmp_path):
+    stale = tmp_path / "devices.tmp"
+    stale.write_text("old")
+    stale.chmod(0o644)
+    path = config.save([dev()], tmp_path / "devices.json")
+    assert oct(path.stat().st_mode & 0o777) == "0o600"
+
+
+def test_bad_version_is_a_config_error():
+    with pytest.raises(config.ConfigError):
+        config.Device.from_json({"id": "x", "key": "k", "version": "abc"})
+    with pytest.raises(config.ConfigError):
+        config.Device.from_json({"id": "x", "key": "k", "version": 9})
+
+
+def test_non_list_entries_are_a_config_error(tmp_path):
+    path = tmp_path / "devices.json"
+    path.write_text(json.dumps(["not a dict"]))
+    with pytest.raises(config.ConfigError):
+        config.load(path)
+
+
+def test_older_bulb_brightness_floor(fake):
+    fake.dpset = {"value_min": 25, "value_max": 255}
+    Light(dev()).white(3, 50)
+    assert fake.calls[-1] == ("white", 10, 50)
+
+
+def test_tinytuya_value_error_becomes_offline_state(fake, cfg, capsys, monkeypatch):
+    def boom(*a):
+        raise ValueError("brightness needs to be between 25 and 255")
+    monkeypatch.setattr(fake, "set_white_percentage", boom)
+    assert cli.main(["--json", "white", "5", "20"]) == 2
+    assert "between" in json.loads(capsys.readouterr().out)["error"]
+
+
+def test_cli_refuses_nan(fake, cfg, capsys):
+    with pytest.raises(SystemExit):
+        cli.main(["white", "nan"])
+    with pytest.raises(SystemExit):
+        cli.main(["colour", "nan", "50", "50"])
