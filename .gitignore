@@ -1,0 +1,10 @@
+__pycache__/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+# compiled by tools/build-translations.sh
+plasma/contents/locale/
+docs/screenshots/.preview.qml
+devices.json
