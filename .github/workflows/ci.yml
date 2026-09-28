@@ -41,7 +41,7 @@ jobs:
     steps:
       # git first, so checkout makes a real repository the diff check can use.
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed git kpackage gettext shellcheck python
+        run: pacman -Syu --noconfirm --needed git kpackage libplasma gettext shellcheck python
       - uses: actions/checkout@v5
       - name: Trust the workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
