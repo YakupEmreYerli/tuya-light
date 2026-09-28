@@ -11,30 +11,12 @@ from dataclasses import asdict, dataclass
 
 import tinytuya
 
+from . import scenes as scene_store
 from .config import Device
 
 
 class LightError(Exception):
     pass
-
-
-@dataclass(frozen=True)
-class Scene:
-    label: str
-    mode: str  # "white" or "colour"
-    a: int  # white: brightness      colour: hue
-    b: int  # white: temperature     colour: saturation
-    c: int = 0  # colour: value
-
-
-SCENES: dict[str, Scene] = {
-    "relax": Scene("Relax", "white", 45, 0),
-    "reading": Scene("Reading", "white", 100, 55),
-    "focus": Scene("Focus", "white", 100, 100),
-    "movie": Scene("Movie", "colour", 255, 85, 18),
-    "night": Scene("Night", "colour", 25, 100, 6),
-    "party": Scene("Party", "colour", 320, 100, 100),
-}
 
 
 @dataclass
@@ -186,14 +168,13 @@ class Light:
         self.white(bright, percent)
 
     def scene(self, name: str) -> None:
-        try:
-            sc = SCENES[name]
-        except KeyError:
-            raise LightError(f"unknown scene {name!r}; known: {', '.join(SCENES)}") from None
+        self.apply(scene_store.get(name))
+
+    def apply(self, sc: "scene_store.Scene") -> None:
         if sc.mode == "white":
-            self.white(sc.a, sc.b)
+            self.white(sc.brightness, sc.temperature)
         else:
-            self.colour(sc.a, sc.b, sc.c)
+            self.colour(sc.hue, sc.saturation, sc.brightness)
 
     def _ensure_on(self) -> None:
         self._check(self.bulb.turn_on())

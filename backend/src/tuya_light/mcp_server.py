@@ -6,11 +6,10 @@ light's state afterwards, so the assistant can confirm what happened.
 
 from __future__ import annotations
 
-from typing import Literal
-
 from . import config
 from .cli import NAMED_COLOURS, _hex_to_hsv
-from .light import SCENES, Light, LightError, State
+from . import scenes as scene_store
+from .light import Light, LightError, State
 
 try:  # mcp 2.x
     from mcp.server.mcpserver import MCPServer as FastMCP
@@ -27,9 +26,6 @@ INSTRUCTIONS = (
     "several lights, call list_devices first and pass `device`; otherwise it "
     "can be left out. Every change returns the new state."
 )
-
-SceneName = Literal["relax", "reading", "focus", "movie", "night", "party"]
-
 
 def _with_light(device: str | None, action) -> dict:
     light = Light(config.pick(config.load(), device))
@@ -58,8 +54,8 @@ def build_server():
 
     @server.tool()
     def list_scenes() -> list[dict]:
-        """List the built-in scenes."""
-        return [{"name": k, "label": v.label, "mode": v.mode} for k, v in SCENES.items()]
+        """List the user's scenes (built-in and their own), with their settings."""
+        return [sc.to_json() for sc in scene_store.load()]
 
     @server.tool()
     def get_state(device: str | None = None) -> dict:
@@ -124,11 +120,42 @@ def build_server():
         return _with_light(device, lambda light: light.brightness(brightness))
 
     @server.tool()
-    def apply_scene(scene: SceneName, device: str | None = None) -> dict:
-        """Apply a built-in scene: relax (warm, soft), reading (bright neutral),
-        focus (bright cool), movie (dim deep blue), night (very dim amber),
-        party (bright magenta)."""
+    def apply_scene(scene: str, device: str | None = None) -> dict:
+        """Apply a scene by its name or label (see list_scenes). Built-ins: relax
+        (warm, soft), reading (bright neutral), focus (bright cool), movie (dim
+        deep blue), night (very dim amber), party (bright magenta); the user may
+        have added or changed some."""
         return _with_light(device, lambda light: light.scene(scene))
+
+    @server.tool()
+    def save_scene(label: str, from_current: bool = True, mode: str | None = None,
+                   brightness: float = 100, temperature: float = 0, hue: float = 0,
+                   saturation: float = 100, device: str | None = None) -> dict:
+        """Save a scene under `label`. By default it captures what the light shows
+        right now; with from_current=false give mode ("white" or "colour") and its
+        values. Saving under an existing label overwrites that scene."""
+        if from_current:
+            light = Light(config.pick(config.load(), device))
+            try:
+                now = light.state()
+            finally:
+                light.close()
+            if not now.online:
+                raise ValueError(f"the light did not answer: {now.error}")
+            if now.mode == "colour":
+                return scene_store.save(label, "colour", hue=now.hue, saturation=now.saturation,
+                                        brightness=now.value).to_json()
+            return scene_store.save(label, "white", temperature=now.temperature,
+                                    brightness=now.brightness).to_json()
+        if mode not in ("white", "colour"):
+            raise ValueError("mode must be white or colour")
+        return scene_store.save(label, mode, brightness=brightness, temperature=temperature,
+                                hue=hue, saturation=saturation).to_json()
+
+    @server.tool()
+    def remove_scene(scene: str) -> dict:
+        """Delete one of the user's scenes; a built-in one is hidden instead."""
+        return {"scene": scene, "result": scene_store.remove(scene)}
 
     return server
 

@@ -11,7 +11,8 @@ import json
 import sys
 
 from . import __version__, config
-from .light import SCENES, Light, LightError, State
+from . import scenes as scene_store
+from .light import Light, LightError, State
 
 NAMED_COLOURS = {
     "red": 0, "orange": 30, "yellow": 55, "green": 120, "cyan": 180,
@@ -69,7 +70,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("mcp", help="run the MCP server on stdio (for AI assistants)")
     sub.add_parser("devices", help="list configured devices")
-    sub.add_parser("scenes", help="list built-in scenes")
+    ls = sub.add_parser("scenes", help="list scenes")
+    ls.add_argument("--all", action="store_true", help="include hidden ones")
     sub.add_parser("state", help="show the current state")
     sub.add_parser("on")
     sub.add_parser("off")
@@ -89,9 +91,60 @@ def build_parser() -> argparse.ArgumentParser:
     t = sub.add_parser("temperature", help="0 warm .. 100 cool, switches to white")
     t.add_argument("percent", type=float)
 
-    sc = sub.add_parser("scene", help="apply a built-in scene")
-    sc.add_argument("name", choices=list(SCENES))
+    sc = sub.add_parser("scene", help="apply a scene (see `scenes`)")
+    sc.add_argument("name")
+
+    ss = sub.add_parser("scene-save", help="create or overwrite a scene")
+    ss.add_argument("label", help="the name people see, e.g. 'Reading nook'")
+    ss.add_argument("--name", help="key to use (default: made from the label)")
+    kind = ss.add_mutually_exclusive_group(required=True)
+    kind.add_argument("--colour", "--color", dest="colour", metavar="SPEC",
+                      help="a colour name, #rrggbb, or 'H S' (hue saturation)")
+    kind.add_argument("--white", type=float, metavar="TEMPERATURE",
+                      help="white light, 0 warm .. 100 cool")
+    kind.add_argument("--current", action="store_true",
+                      help="whatever the light shows right now")
+    ss.add_argument("--brightness", type=float, default=None, help="0-100 (default 100)")
+
+    for cmd, text in (("scene-remove", "delete your scene, or hide a built-in one"),
+                      ("scene-hide", "hide a scene from lists and the widget"),
+                      ("scene-show", "show a hidden scene again")):
+        x = sub.add_parser(cmd, help=text)
+        x.add_argument("name")
+    sr = sub.add_parser("scene-reset", help="restore built-in scenes to their original form")
+    sr.add_argument("name", nargs="?", help="one scene (default: all built-ins)")
     return p
+
+
+def _print_scene(scene, as_json: bool) -> None:
+    print(json.dumps(scene.to_json(), ensure_ascii=False) if as_json else
+          f"{scene.name}: {scene.label}")
+
+
+def _edit_scenes(args: argparse.Namespace) -> int:
+    if args.cmd == "scene-save":
+        bright = 100 if args.brightness is None else args.brightness
+        if args.colour is not None:
+            parts = args.colour.split()
+            if len(parts) == 2:
+                hue, sat = (float(x) for x in parts)
+            else:
+                hue, sat, _ = _parse_colour(args.colour)
+            saved = scene_store.save(args.label, "colour", name=args.name, hue=hue,
+                                     saturation=sat, brightness=bright)
+        else:
+            saved = scene_store.save(args.label, "white", name=args.name,
+                                     temperature=args.white, brightness=bright)
+        _print_scene(saved, args.json)
+    elif args.cmd == "scene-remove":
+        what = scene_store.remove(args.name)
+        print(json.dumps({"name": args.name, "result": what}) if args.json else f"{args.name}: {what}")
+    elif args.cmd in ("scene-hide", "scene-show"):
+        _print_scene(scene_store.set_hidden(args.name, args.cmd == "scene-hide"), args.json)
+    elif args.cmd == "scene-reset":
+        scene_store.reset(args.name)
+        print(json.dumps({"reset": args.name or "all"}) if args.json else "reset")
+    return 0
 
 
 def config_regions():
@@ -112,9 +165,16 @@ def run(args: argparse.Namespace) -> int:
         return mcp_run()
 
     if args.cmd == "scenes":
-        rows = [{"name": k, "label": v.label, "mode": v.mode} for k, v in SCENES.items()]
-        print(json.dumps(rows) if args.json else "\n".join(r["name"] for r in rows))
+        rows = [sc.to_json() for sc in scene_store.load(include_hidden=args.all)]
+        print(json.dumps(rows, ensure_ascii=False) if args.json else
+              "\n".join(f"{r['name']}\t{r['label']}{'  (hidden)' if r['hidden'] else ''}"
+                        for r in rows))
         return 0
+
+    if args.cmd in ("scene-remove", "scene-hide", "scene-show", "scene-reset") or (
+        args.cmd == "scene-save" and not args.current
+    ):
+        return _edit_scenes(args)
 
     devices = config.load()
     if args.cmd == "devices":
@@ -149,6 +209,21 @@ def run(args: argparse.Namespace) -> int:
             light.temperature(args.percent)
         elif args.cmd == "scene":
             light.scene(args.name)
+        elif args.cmd == "scene-save":  # --current: capture the light as it is
+            now = light.state()
+            if not now.online:
+                raise LightError(now.error or "the light did not answer")
+            bright = args.brightness
+            if now.mode == "colour":
+                saved = scene_store.save(args.label, "colour", name=args.name, hue=now.hue,
+                                         saturation=now.saturation,
+                                         brightness=bright if bright is not None else now.value)
+            else:
+                saved = scene_store.save(args.label, "white", name=args.name,
+                                         temperature=now.temperature,
+                                         brightness=bright if bright is not None else now.brightness)
+            _print_scene(saved, args.json)
+            return 0
         state = light.state()
     except LightError as err:
         state = State(id=light.device.id, name=light.device.name, online=False, error=str(err))

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "tuya-light"
 version = "0.1.0"
 description = "Control Tuya Wi-Fi bulbs over your local network: CLI, MCP server and KDE Plasma widget"
-readme = "../README.md"
+readme = "README.md"
 license = "GPL-2.0-or-later"
 requires-python = ">=3.10"
 dependencies = ["tinytuya>=1.13"]

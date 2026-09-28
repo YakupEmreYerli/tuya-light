@@ -3,7 +3,9 @@ import json
 import pytest
 
 from tuya_light import cli, config
-from tuya_light.light import SCENES, Light, LightError
+from tuya_light import scenes as scene_store
+from tuya_light.config import ConfigError
+from tuya_light.light import Light
 
 
 class FakeBulb:
@@ -47,6 +49,11 @@ class FakeBulb:
         self.calls.append(("white", b, t))
         self.mode, self.bright, self.temp = "white", b, t
         return {}
+
+
+@pytest.fixture(autouse=True)
+def isolated_scenes(tmp_path, monkeypatch):
+    monkeypatch.setenv("TUYA_LIGHT_SCENES", str(tmp_path / "scenes.json"))
 
 
 @pytest.fixture
@@ -132,10 +139,10 @@ def test_toggle(fake):
 
 def test_every_scene_applies(fake):
     light = Light(dev())
-    for name in SCENES:
-        light.scene(name)
-    assert len([c for c in fake.calls if c[0] in ("hsv", "white")]) == len(SCENES)
-    with pytest.raises(LightError):
+    for sc in scene_store.BUILTIN:
+        light.scene(sc.name)
+    assert len([c for c in fake.calls if c[0] in ("hsv", "white")]) == len(scene_store.BUILTIN)
+    with pytest.raises(ConfigError):
         light.scene("disco")
 
 

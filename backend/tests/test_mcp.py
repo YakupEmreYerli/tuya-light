@@ -54,3 +54,25 @@ def test_scene_and_device_by_name(server):
     srv, bulb = server
     state = call(srv, "apply_scene", scene="night", device="Desk")
     assert state["mode"] == "colour" and state["value"] == 6
+
+
+def test_save_scene_from_current_light_then_apply(server, tmp_path, monkeypatch):
+    monkeypatch.setenv("TUYA_LIGHT_SCENES", str(tmp_path / "scenes.json"))
+    srv, bulb = server
+    bulb.mode, bulb.hsv = "colour", (0.5, 1.0, 0.4)
+    saved = call(srv, "save_scene", label="Evening")
+    assert (saved["name"], saved["mode"], saved["hue"], saved["brightness"]) == ("evening", "colour", 180, 40)
+    names = [s["name"] for s in call_list(srv, "list_scenes")]
+    assert "evening" in names
+    state = call(srv, "apply_scene", scene="Evening")
+    assert state["hue"] == 180
+    assert call(srv, "remove_scene", scene="evening")["result"] == "removed"
+
+
+def call_list(server, name, **args):
+    result = asyncio.run(server.call_tool(name, args))
+    if hasattr(result, "structuredContent") and result.structuredContent:
+        data = result.structuredContent
+        return data.get("result", data)
+    content = result.content if hasattr(result, "content") else (result[0] if isinstance(result, tuple) else result)
+    return [json.loads(c.text) for c in content]
