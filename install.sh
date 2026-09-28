@@ -22,9 +22,12 @@ if ! command -v pipx >/dev/null 2>&1; then
 fi
 
 echo "==> Installing the tuya-light command"
-# A clean reinstall: `pipx install --force` cannot always rebuild an existing venv.
-pipx uninstall tuya-light >/dev/null 2>&1 || true
-pipx install "$root/backend$extra"
+# --force upgrades in place; if pipx cannot rebuild the existing venv, start
+# clean. A failed build never removes a working install.
+if ! pipx install --force "$root/backend$extra"; then
+    pipx uninstall tuya-light >/dev/null 2>&1 || true
+    pipx install "$root/backend$extra"
+fi
 
 if [ "$widget" = 1 ]; then
     if ! command -v kpackagetool6 >/dev/null 2>&1; then

@@ -25,22 +25,44 @@ STATES = {
     "setup": {"config": True},
 }
 
+SCENES = [
+    {"name": "relax", "label": "Relax", "mode": "white", "brightness": 45, "temperature": 0, "hue": 0, "saturation": 100, "builtin": True, "hidden": False},
+    {"name": "reading", "label": "Reading", "mode": "white", "brightness": 100, "temperature": 55, "hue": 0, "saturation": 100, "builtin": True, "hidden": False},
+    {"name": "focus", "label": "Focus", "mode": "white", "brightness": 100, "temperature": 100, "hue": 0, "saturation": 100, "builtin": True, "hidden": False},
+    {"name": "movie", "label": "Movie", "mode": "colour", "brightness": 18, "temperature": 0, "hue": 255, "saturation": 85, "builtin": True, "hidden": False},
+    {"name": "night", "label": "Night", "mode": "colour", "brightness": 6, "temperature": 0, "hue": 25, "saturation": 100, "builtin": True, "hidden": False},
+    {"name": "sunset", "label": "Sunset", "mode": "colour", "brightness": 70, "temperature": 0, "hue": 18, "saturation": 90, "builtin": False, "hidden": False},
+]
+
+CONFIG = {
+    "sections": ["wheel", "brightness", "temperature", "scenes"],
+    "wheelSize": 12, "sceneColumns": 3,
+    "favoriteColours": ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#00c7be", "#0a84ff", "#8e5cff", "#ff2d92"],
+    "iconStyle": "bulb", "tintIcon": True, "dimWhenOff": True, "showPercent": False,
+    "leftClick": "popup", "middleClick": "toggle", "wheelAction": "brightness", "wheelStep": 5,
+}
+
+# The popup sits on Plasma's own dialog frame (dialogs/background from the
+# current Plasma theme), so corners, border and shadow match the real thing.
 WRAPPER = """
 import QtQuick
+import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.ksvg as KSvg
 import "file://%(ui)s" as Ui
 
-Rectangle {
+Item {
     id: stage
-    width: Kirigami.Units.gridUnit * 18
-    height: Kirigami.Units.gridUnit * 24
-    color: Kirigami.Theme.backgroundColor
-    Kirigami.Theme.colorSet: Kirigami.Theme.View
+    width: frame.width + 2 * pad
+    height: frame.height + 2 * pad
+    readonly property int pad: Kirigami.Units.gridUnit
 
     QtObject {
         id: fake
         property var light: previewState.config ? ({}) : previewState
         property var devices: previewDevices
+        property var scenes: previewScenes
+        property var allScenes: previewScenes
         property bool busy: false
         property bool loaded: !previewState.config
         property bool needsSetup: previewState.config === true
@@ -48,9 +70,11 @@ Rectangle {
         property string error: previewState.config ? "no device list" : (previewState.error || "")
         property string device: ""
         readonly property bool online: loaded && light.online === true
-        function send(args) { console.log("send", args) }
+        function send(args) {}
         function refresh() {}
         function listDevices() {}
+        function listScenes() {}
+        function quote(s) { return "'" + s + "'" }
     }
     QtObject {
         id: fakeRoot
@@ -59,11 +83,51 @@ Rectangle {
         function selectDevice(id) {}
     }
 
-    Ui.FullRepresentation {
+    KSvg.FrameSvgItem {
+        id: frame
+        x: stage.pad
+        y: stage.pad
+        imagePath: "dialogs/background"
+        width: popup.Layout.preferredWidth + margins.left + margins.right
+        height: Math.max(popup.Layout.preferredHeight, Kirigami.Units.gridUnit * 16) + margins.top + margins.bottom
+
+        Ui.FullRepresentation {
+            id: popup
+            anchors.fill: parent
+            anchors.leftMargin: frame.margins.left
+            anchors.rightMargin: frame.margins.right
+            anchors.topMargin: frame.margins.top
+            anchors.bottomMargin: frame.margins.bottom
+            backend: fake
+            root: fakeRoot
+            cfg: previewConfig
+        }
+    }
+}
+"""
+
+
+# A settings page on a plain window background, the way the widget's
+# configuration dialog shows it.
+CONFIG_WRAPPER = """
+import QtQuick
+import org.kde.kirigami as Kirigami
+
+Rectangle {
+    width: Kirigami.Units.gridUnit * 34
+    height: Kirigami.Units.gridUnit * 28
+    color: Kirigami.Theme.backgroundColor
+    Kirigami.Theme.colorSet: Kirigami.Theme.Window
+    Loader {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.largeSpacing
-        backend: fake
-        root: fakeRoot
+        source: "file://%(ui)s/%(page)s.qml"
+        onLoaded: {
+            // What Plasma's config dialog does: fill every cfg_ property it declares.
+            for (const key in previewConfig) {
+                if (("cfg_" + key) in item) item["cfg_" + key] = previewConfig[key]
+            }
+        }
     }
 }
 """
@@ -75,15 +139,21 @@ def main() -> int:
     ap.add_argument("--scale", default="2")
     ap.add_argument("--states", nargs="*", default=list(STATES))
     ap.add_argument("--devices", type=int, default=1, help="how many devices to pretend")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=JSON",
+                    help="override a widget setting, e.g. --set 'sections=[\"brightness\",\"scenes\"]'")
+    ap.add_argument("--suffix", default="", help="added to output file names")
+    ap.add_argument("--config", nargs="*", default=None, metavar="PAGE",
+                    help="render settings pages instead (configAppearance, configBehaviour, ...)")
     args = ap.parse_args()
 
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     os.environ.setdefault("QT_QPA_PLATFORMTHEME", "kde")
     os.environ.setdefault("QT_QUICK_BACKEND", "software")
+    os.environ["QT_FORCE_STDERR_LOGGING"] = "1"  # QML errors to the terminal, not the journal
     os.environ["QT_SCALE_FACTOR"] = args.scale
 
     from PySide6.QtCore import QObject, QTimer, QUrl, Slot
-    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtGui import QColor, QGuiApplication
     from PySide6.QtQuick import QQuickView
 
     class Ki18n(QObject):
@@ -125,7 +195,13 @@ def main() -> int:
     devices = [{"id": f"d{i}", "name": n} for i, n in
                enumerate(["Desk lamp", "Ceiling", "Hall"][: args.devices])]
 
-    queue = list(args.states)
+    import json as _json
+    cfg = dict(CONFIG)
+    for item in args.set:
+        key, _, value = item.partition("=")
+        cfg[key] = _json.loads(value)
+
+    queue = list(args.states) if args.config is None else ["config:" + p for p in args.config]
     failures = []
 
     def render_next():
@@ -135,11 +211,19 @@ def main() -> int:
             return
         name = queue.pop(0)
         view = QQuickView()
+        view.setColor(QColor(0, 0, 0, 0))
         ctx = view.rootContext()
         ctx.setContextObject(ki18n)
-        ctx.setContextProperty("previewState", STATES[name])
+        ctx.setContextProperty("previewState", STATES.get(name, {}))
         ctx.setContextProperty("previewDevices", devices)
-        view.setSource(QUrl.fromLocalFile(str(wrapper)))
+        ctx.setContextProperty("previewScenes", SCENES)
+        ctx.setContextProperty("previewConfig", cfg)
+        source = wrapper
+        if name.startswith("config:"):
+            source = args.outdir / ".config-preview.qml"
+            source.write_text(CONFIG_WRAPPER % {"ui": UI, "page": name[7:]})
+            name = name[7:]
+        view.setSource(QUrl.fromLocalFile(str(source)))
         if view.status() != QQuickView.Status.Ready:
             for err in view.errors():
                 print(err.toString(), file=sys.stderr)
@@ -148,15 +232,20 @@ def main() -> int:
             return
         view.show()
 
+        def fit():
+            root = view.rootObject()
+            view.resize(int(root.width()), int(root.height()))
+            QTimer.singleShot(400, grab)
+
         def grab():
-            out = args.outdir / f"{name}.png"
+            out = args.outdir / f"{name}{args.suffix}.png"
             view.grabWindow().save(str(out))
             print(out)
             view.close()
             view.deleteLater()
             render_next()
 
-        QTimer.singleShot(900, grab)
+        QTimer.singleShot(2500 if name in (args.config or []) else 700, fit)
 
     QTimer.singleShot(0, render_next)
     return app.exec()

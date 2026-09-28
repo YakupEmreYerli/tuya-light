@@ -12,11 +12,13 @@ Telefon uygulaması her dokunuşta Tuya'nın bulutuna gider. Tuya Light ise ampu
 
 ## Neler var
 
-- **Panel bileşeni.** Ampulün o anki rengini alan bir simge. Tıklayınca renk tekerleği, parlaklık çubuğu, sıcaktan soğuğa beyaz ışık çubuğu ve altı sahne açılır. Orta tık ışığı açıp kapatır, simgenin üstünde kaydırmak kısar. Birden fazla ampul varsa üstte seçici çıkar.
+- **Panel bileşeni.** Ampulün o anki rengini alan bir simge. Tıklayınca renk tekerleği, parlaklık çubuğu, sıcaktan soğuğa beyaz ışık çubuğu, favori renkler ve sahneleriniz açılır. Birden fazla ampul varsa üstte seçici çıkar.
+- **Kendi sahneleriniz.** Bileşenin ayarlarından sahne ekleyin, düzenleyin, gizleyin, silin ya da ışığın o anki hâlini sahne olarak kaydedin. Hazır sahneler de düzenlenir ve ilk hâline döner. Komut satırı ve MCP sunucusu aynı listeyi görür.
+- **İstediğiniz gibi.** Pencerede hangi bölümlerin hangi sırayla görüneceği, teker boyutu, sahne sütunları ve favori renkler; sol tık, orta tık ve fare tekerleğinin ne yapacağı (aç, aç/kapat, bir sahne; parlaklık, sıcaklık ya da renk); panel simgesi (dört şekil, renkli ya da değil, kapalıyken soluk, yanında parlaklık).
 - **Komut satırı.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Her komut ampulün son durumunu yazar, `--json` ile makinenin okuyacağı biçimde.
 - **MCP sunucusu.** `tuya-light mcp` aynı kontrolleri araç olarak sunar; Claude gibi bir asistana "ışığı biraz ısıt" ya da "film modu" demek yeter.
 - **İki ampul nesli.** Eski (veri noktaları 1-5) ve yeni (20-24) ampuller; 3.1'den 3.5'e protokol sürümleri, [tinytuya](https://github.com/jasonacox/tinytuya) üzerinden.
-- **Sahneler:** Rahat, Okuma, Odak, Film, Gece, Parti.
+- **Hazır sahneler:** Rahat, Okuma, Odak, Film, Gece, Parti.
 - **Diller:** İngilizce, Türkçe.
 
 ## Gerekenler
@@ -71,16 +73,29 @@ tuya-light [-d CİHAZ] [--json] KOMUT
 | `white PARLAKLIK [SICAKLIK]` | Beyaz ışık, ikisi de 0-100; sıcaklık 0 sıcak, 100 soğuk |
 | `brightness YÜZDE` | Rengi ya da beyaz tonu koruyarak kısar, açar |
 | `temperature YÜZDE` | Beyaz ışık sıcaklığı, beyaza geçer |
-| `scene AD` | `relax`, `reading`, `focus`, `movie`, `night`, `party` |
-| `devices`, `scenes` | Tanımlı olanları listeler |
+| `scene AD` | Adı ya da etiketiyle sahne uygular |
+| `scene-save ETİKET --colour RENK\|--white SICAKLIK\|--current [--brightness N]` | Sahne oluşturur ya da üzerine yazar; `--current` ışığın o anki hâlini alır |
+| `scene-remove AD` | Kendi sahnenizi siler (hazır sahne gizlenir) |
+| `scene-hide AD`, `scene-show AD` | Listelerden ve bileşenden gizler, geri gösterir |
+| `scene-reset [AD]` | Hazır sahneleri ilk hâline döndürür |
+| `devices`, `scenes [--all]` | Tanımlı olanları listeler (`--all` gizli sahneleri de gösterir) |
 | `setup` | Yerel anahtarları buluttan alır (bir kez) |
 | `mcp` | MCP sunucusunu stdio üzerinde çalıştırır |
 
 `-d` cihaz kimliği ya da adı alır, verilmezse listedeki ilk cihaz. Çıkış kodları: 0 tamam, 2 ışık cevap vermedi, 3 cihaz listesi yok.
 
+Sahneler `~/.config/tuya-light/scenes.json` dosyasında durur; dosyada yalnızca hazır sahnelerden farklı olanlar tutulur.
+
+```bash
+tuya-light scene-save "Kitap köşesi" --white 30 --brightness 80
+tuya-light scene-save "Gün batımı" --colour '#ff6a2a' --brightness 70
+tuya-light scene-save "Şu an" --current
+tuya-light scene "kitap köşesi"
+```
+
 ## MCP sunucusu
 
-Araçlar: `list_devices`, `list_scenes`, `get_state`, `turn_on`, `turn_off`, `toggle`, `set_colour`, `set_white`, `set_brightness`, `apply_scene`. Her değişiklik ışığın yeni durumunu döndürür.
+Araçlar: `list_devices`, `list_scenes`, `get_state`, `turn_on`, `turn_off`, `toggle`, `set_colour`, `set_white`, `set_brightness`, `apply_scene`, `save_scene`, `remove_scene`. Her değişiklik ışığın yeni durumunu döndürür. `save_scene` varsayılan olarak ışığın o anki hâlini kaydettiği için "bunu Akşam diye kaydet" demek yeter.
 
 Claude Code:
 
@@ -100,12 +115,16 @@ Claude Desktop, Cursor ve diğerleri (JSON ayarındaki `mcpServers`):
 
 ## Bileşen ayarları
 
-| Ayar | Varsayılan | |
-| --- | --- | --- |
-| Arka uç komutu | `tuya-light` | Plasma'nın `PATH`'inde değilse tam yol |
-| Cihaz | listedeki ilk | Kimlik ya da ad; penceredeki seçici de bunu değiştirir |
-| Işığı kontrol etme sıklığı | 60 sn | Pencere her açıldığında da yenilenir |
-| Kaydırma adımı | %5 | Simgede tekerleğin her çentiğinde parlaklık değişimi |
+Simgeye sağ tık → **Yapılandır…**. Dört sekme:
+
+| Sekme | Neler ayarlanır |
+| --- | --- |
+| Görünüm | Pencerede hangi bölümlerin hangi sırayla görüneceği (renk tekerleği, parlaklık, beyaz ışık sıcaklığı, favori renkler, sahneler); teker boyutu; sahne sütunları; favori renkler; panel simgesinin şekli, rengi, kapalıyken solması, yanında parlaklık |
+| Davranış | Sol ve orta tık: kontrolleri aç, ışığı aç/kapat, seçtiğiniz bir sahneyi uygula ya da hiçbir şey. Fare tekerleği: parlaklık, beyaz ışık sıcaklığı, renk ya da hiçbir şey; adım büyüklüğü ve yön |
+| Sahneler | Kendi sahneleriniz ve hazır olanlar: ışıkta dene, düzenle (renk tekerleği ya da beyaz çubukları, "ışıktan al" ile), gizle, sil, ilk hâline döndür |
+| Cihaz | Hangi ampul, ne sıklıkla kontrol edileceği, arka uç komutu, bağlantı testi |
+
+Varsayılanlar: sol tık kontrolleri açar, orta tık ışığı açıp kapatır, tekerlek parlaklığı %5 değiştirir.
 
 ## Nasıl çalışır
 
@@ -125,7 +144,7 @@ Bileşenin içinde Python yok: komut satırı aracını çalıştırıp tek sat�
 backend/     Python paketi: çekirdek, CLI, MCP sunucusu, testler
 plasma/      Plasma 6 bileşeni (QML)
 po/          çeviriler
-tools/       ekransız ekran görüntüsü, banner, çeviri betikleri
+tools/       pencerenin ve ayarların ekransız görüntüleri, banner, çeviri betikleri
 ```
 
 ## Sorun giderme

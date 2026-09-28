@@ -12,11 +12,13 @@ The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb'
 
 ## Features
 
-- **Panel widget.** A bulb icon that takes the light's current colour. Click for a colour wheel, a brightness slider, a warm-to-cool white slider and six scenes. Middle-click switches the light, scrolling dims it. Several bulbs get a picker at the top.
+- **Panel widget.** A bulb icon that takes the light's current colour. Click for a colour wheel, a brightness slider, a warm-to-cool white slider, favourite colours and your scenes. Several bulbs get a picker at the top.
+- **Your own scenes.** Create, edit, hide and delete scenes in the widget's settings, or save whatever the light shows right now. Built-in ones can be edited and restored. The command line and the MCP server see the same list.
+- **Make it yours.** Choose which popup sections appear and in what order, the wheel size, scene columns and favourite colours; what left click, middle click and the scroll wheel do (open, switch, a scene; brightness, warmth or colour); the panel icon (four shapes, tinted or not, dimmed when off, with the brightness next to it).
 - **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command prints the resulting state; `--json` makes it machine-readable.
 - **MCP server.** `tuya-light mcp` exposes the same controls as tools, so an assistant such as Claude can answer "make the light warmer" or "movie mode".
 - **Both bulb generations.** Older bulbs (data points 1-5) and newer ones (20-24) are decoded; protocol versions 3.1 to 3.5 through [tinytuya](https://github.com/jasonacox/tinytuya).
-- **Scenes:** Relax, Reading, Focus, Movie, Night, Party.
+- **Built-in scenes:** Relax, Reading, Focus, Movie, Night, Party.
 - **Translations:** English, Turkish.
 
 ## Requirements
@@ -71,16 +73,29 @@ tuya-light [-d DEVICE] [--json] COMMAND
 | `white BRIGHTNESS [TEMPERATURE]` | White light, both 0-100; temperature 0 is warm, 100 cool |
 | `brightness PERCENT` | Dim or brighten, keeping the current colour or white tone |
 | `temperature PERCENT` | White temperature, switches to white |
-| `scene NAME` | `relax`, `reading`, `focus`, `movie`, `night`, `party` |
-| `devices`, `scenes` | List what is configured |
+| `scene NAME` | Apply a scene by name or label |
+| `scene-save LABEL --colour SPEC\|--white TEMP\|--current [--brightness N]` | Create or overwrite a scene; `--current` captures the light as it is |
+| `scene-remove NAME` | Delete your scene (a built-in one is hidden) |
+| `scene-hide NAME`, `scene-show NAME` | Hide from lists and the widget, or show again |
+| `scene-reset [NAME]` | Restore built-in scenes to their original form |
+| `devices`, `scenes [--all]` | List what is configured (`--all` includes hidden scenes) |
 | `setup` | Fetch local keys from the cloud (once) |
 | `mcp` | Run the MCP server on stdio |
 
 `-d` takes a device id or name and defaults to the first device. Exit codes: 0 done, 2 the light did not answer, 3 no device list yet.
 
+Scenes are stored in `~/.config/tuya-light/scenes.json`, which holds only what differs from the built-ins.
+
+```bash
+tuya-light scene-save "Reading nook" --white 30 --brightness 80
+tuya-light scene-save "Sunset" --colour '#ff6a2a' --brightness 70
+tuya-light scene-save "Right now" --current
+tuya-light scene "reading nook"
+```
+
 ## MCP server
 
-Tools: `list_devices`, `list_scenes`, `get_state`, `turn_on`, `turn_off`, `toggle`, `set_colour`, `set_white`, `set_brightness`, `apply_scene`. Each change returns the light's new state.
+Tools: `list_devices`, `list_scenes`, `get_state`, `turn_on`, `turn_off`, `toggle`, `set_colour`, `set_white`, `set_brightness`, `apply_scene`, `save_scene`, `remove_scene`. Each change returns the light's new state, and "save this as Evening" works because `save_scene` captures the current light by default.
 
 Claude Code:
 
@@ -100,12 +115,16 @@ Claude Desktop, Cursor and other clients (`mcpServers` in their JSON config):
 
 ## Widget settings
 
-| Setting | Default | |
-| --- | --- | --- |
-| Backend command | `tuya-light` | Full path if it is not on Plasma's `PATH` |
-| Device | first in the list | Id or name; the popup's picker sets it too |
-| Check the light every | 60 s | Also refreshed whenever the popup opens |
-| Scroll step | 5 % | Brightness change per wheel notch on the icon |
+Right-click the icon → **Configure…**. Four tabs:
+
+| Tab | What you set |
+| --- | --- |
+| Appearance | Which popup sections show and their order (colour wheel, brightness, white temperature, favourite colours, scenes); wheel size; scene columns; favourite colours; panel icon shape, tint, dimming when off, brightness next to the icon |
+| Behaviour | Left and middle click: open the controls, switch the light, apply a scene of your choice, or nothing. Scroll wheel: brightness, white temperature, colour, or nothing; step size and direction |
+| Scenes | Your scenes and the built-in ones: try on the light, edit (colour wheel or white sliders, with "take from the light"), hide, delete, restore |
+| Device | Which bulb, how often to check it, the backend command, a connection test |
+
+Defaults: left click opens the controls, middle click switches the light, scrolling changes brightness by 5 %.
 
 ## How it works
 
@@ -125,7 +144,7 @@ The widget has no Python in it: it runs the CLI and reads its one-line JSON answ
 backend/     Python package: core, CLI, MCP server, tests
 plasma/      the Plasma 6 widget (QML)
 po/          translations
-tools/       off-screen screenshots, banner, translation scripts
+tools/       off-screen renders of the popup and settings, banner, translation scripts
 ```
 
 ## Troubleshooting

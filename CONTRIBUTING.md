@@ -27,6 +27,9 @@ tools/preview.py /tmp/shots        # renders the popup off-screen; look at the P
 - **Human units outside, Tuya units inside.** Everything the CLI, MCP server and widget see is 0-100 (hue 0-360). The raw ranges (10-1000 or 25-255, hex colour strings) never leave `backend/src/tuya_light/light.py`. `decode_dps` handles both bulb generations; if you add a layout, add a test with a real sample.
 - **Bulbs push partial updates.** Right after a write, a bulb sends only the data points that changed, and that packet can arrive in place of the status reply. `Light._raw_status` merges replies until the switch point is there. Don't "simplify" that loop away.
 - **One command at a time from the widget.** `Backend.qml` keeps at most one pending command and replaces it with newer ones. Sending every slider step would queue dozens of TCP sessions against a device that handles one at a time.
+- **Scenes belong to the backend.** They live in `scenes.json` and go through `tuya_light/scenes.py`, which stores only differences from the built-ins. The widget edits them by running `tuya-light scene-save/remove/...`; don't copy them into the widget's own settings, or the CLI and MCP server stop seeing the same list.
+- **Widget settings are passed in, not read.** `FullRepresentation` and `CompactRepresentation` take `cfg` (Plasmoid.configuration) as a property, which is what lets `tools/preview.py` render them with a stand-in. Keep new settings on that path.
+- **Previews render in software.** `tools/preview.py` uses the software scene graph, where tinted (mask) icons come out untinted; that is the renderer, not the widget. `tools/preview.py OUT --config configScenes` renders a settings tab.
 - **Every command prints the state afterwards.** The widget relies on this to avoid a second call; keep it true for new commands.
 - **No shell interpolation of user input in QML.** Device names go through `_quote()` in `Backend.qml`.
 

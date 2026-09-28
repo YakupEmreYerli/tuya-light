@@ -27,14 +27,6 @@ def logo(size: int) -> Image.Image:
         return Image.open(out).convert("RGBA")
 
 
-def rounded(img: Image.Image, radius: int) -> Image.Image:
-    mask = Image.new("L", img.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *img.size), radius, fill=255)
-    img = img.convert("RGBA")
-    img.putalpha(mask)
-    return img
-
-
 def main() -> None:
     bg = Image.new("RGB", (W, H), "#0c0d15")
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -45,21 +37,23 @@ def main() -> None:
     glow = glow.filter(ImageFilter.GaussianBlur(120))
     bg.paste(glow, (0, 0), glow)
 
-    shot = Image.open(ROOT / "docs/screenshots/colour.png")
-    target_h = 560
+    # The render already carries Plasma's dialog frame and a transparent margin.
+    shot = Image.open(ROOT / "docs/screenshots/colour.png").convert("RGBA")
+    shot = shot.crop(shot.getbbox())
+    target_h = 580
     shot = shot.resize((round(shot.width * target_h / shot.height), target_h), Image.LANCZOS)
-    shot = rounded(shot, 22)
-    x, y = W - shot.width - 90, (H - shot.height) // 2
+    # The heading strip runs over the frame's top corners; round all four the
+    # same so the popup reads as one piece.
+    mask = Image.new("L", shot.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, shot.width - 1, shot.height - 1), 14, fill=255)
+    shot.putalpha(Image.composite(shot.getchannel("A"), mask, mask))
+    x, y = W - shot.width - 80, (H - shot.height) // 2
     shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle(
-        (x - 4, y + 14, x + shot.width + 4, y + shot.height + 22), 26, fill=(0, 0, 0, 150))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(24))
+    alpha = shot.getchannel("A").point(lambda a: 150 if a > 0 else 0)
+    shadow.paste(Image.new("RGBA", shot.size, (0, 0, 0, 255)), (x, y + 16), alpha)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(26))
     bg.paste(shadow, (0, 0), shadow)
-    border = Image.new("RGBA", (shot.width + 2, shot.height + 2), (0, 0, 0, 0))
-    ImageDraw.Draw(border).rounded_rectangle(
-        (0, 0, shot.width + 1, shot.height + 1), 23, outline=(255, 255, 255, 38), width=1)
     bg.paste(shot, (x, y), shot)
-    bg.paste(border, (x - 1, y - 1), border)
 
     mark = logo(112)
     bg.paste(mark, (90, 150), mark)
