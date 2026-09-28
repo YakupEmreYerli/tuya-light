@@ -17,8 +17,8 @@ jobs:
       matrix:
         python: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
       - name: Install
@@ -39,9 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
+      # git first, so checkout makes a real repository the diff check can use.
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed kpackage gettext shellcheck python
+        run: pacman -Syu --noconfirm --needed git kpackage gettext shellcheck python
+      - uses: actions/checkout@v5
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Shell scripts
         run: shellcheck install.sh tools/*.sh
       - name: Metadata
