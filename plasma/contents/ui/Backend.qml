@@ -28,6 +28,9 @@ Item {
     property string error: ""
 
     readonly property bool online: loaded && light.online === true
+    // False while the answer in `light` is already outdated: a newer command
+    // was queued behind it. Controls should not snap back to such a state.
+    property bool latest: true
 
     property string _pending: ""
     property var _jobs: ({})
@@ -132,6 +135,7 @@ Item {
         } else if (parsed) {
             needsSetup = false
             missingBackend = false
+            latest = _pending.length === 0
             light = parsed
             loaded = true
             error = parsed.online ? "" : (parsed.error || i18n("The light did not answer."))

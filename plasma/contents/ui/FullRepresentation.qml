@@ -42,7 +42,9 @@ PlasmaExtras.Representation {
     Connections {
         target: full.backend
         function onLightChanged() {
-            if (full.dragging) {
+            // Mid-drag, or an in-between answer while the final value is still
+            // queued: keep showing what the user chose.
+            if (full.dragging || !full.backend.latest) {
                 return
             }
             full.shownHue = full.light.hue || 0
