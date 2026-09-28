@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tuya-light"
+version = "0.1.0"
+description = "Control Tuya Wi-Fi bulbs over your local network: CLI, MCP server and KDE Plasma widget"
+readme = "../README.md"
+license = "GPL-2.0-or-later"
+requires-python = ">=3.10"
+dependencies = ["tinytuya>=1.13"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.2"]
+test = ["pytest>=7", "mcp>=1.2"]
+
+[project.scripts]
+tuya-light = "tuya_light.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/YakupEmreYerli/tuya-light"
+Issues = "https://github.com/YakupEmreYerli/tuya-light/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
