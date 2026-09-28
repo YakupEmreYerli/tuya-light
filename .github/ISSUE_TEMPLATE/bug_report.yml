@@ -1,0 +1,32 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: Output of `tuya-light --json state`
+      description: Run it once; it contains no keys.
+      render: json
+  - type: input
+    id: bulb
+    attributes:
+      label: Bulb
+      description: Brand and model as shown in the Tuya / Smart Life app
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Distribution, Plasma version (`plasmashell --version`), `tuya-light --version`
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part
+      options: [Panel widget, Command line, MCP server, Setup]

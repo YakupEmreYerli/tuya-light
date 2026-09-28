@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: pip install -e './backend[test]'
+      - name: Test
+        run: pytest -q backend
+      - name: CLI smoke test
+        env:
+          TUYA_LIGHT_CONFIG: /tmp/none.json
+        run: |
+          tuya-light --version
+          tuya-light scenes
+          set +e; tuya-light --json state; code=$?; set -e
+          test "$code" = 3   # no device list yet
+
+  widget:
+    name: Plasma widget
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed kpackage gettext shellcheck python
+      - name: Shell scripts
+        run: shellcheck install.sh tools/*.sh
+      - name: Metadata
+        run: python -m json.tool plasma/metadata.json > /dev/null
+      - name: Translations compile
+        run: tools/build-translations.sh
+      - name: Translations are up to date with the QML
+        run: |
+          tools/update-translations.sh
+          # POT dates change on every run; compare only the message ids.
+          git diff --quiet -I '^"POT-Creation-Date' -- po/ || { git diff -- po/; exit 1; }
+      - name: Package installs
+        run: |
+          export HOME=$(mktemp -d)
+          kpackagetool6 --type Plasma/Applet --install plasma
+          kpackagetool6 --type Plasma/Applet --show com.github.yakupemreyerli.tuyalight
+      - name: Files named in the README exist
+        run: |
+          for f in docs/banner.png docs/brand/logo.svg install.sh CONTRIBUTING.md LICENSE README.tr.md; do
+            test -e "$f" || { echo "missing: $f"; exit 1; }
+          done
