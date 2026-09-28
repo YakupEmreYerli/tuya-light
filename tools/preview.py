@@ -88,6 +88,9 @@ Item {
         x: stage.pad
         y: stage.pad
         imagePath: "dialogs/background"
+        // The heading reaches for the dialog's edge; keep it inside the frame
+        // as Plasma's own popup window does.
+        clip: true
         width: popup.Layout.preferredWidth + margins.left + margins.right
         height: Math.max(popup.Layout.preferredHeight, Kirigami.Units.gridUnit * 16) + margins.top + margins.bottom
 
