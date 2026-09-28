@@ -4,7 +4,7 @@
 set -eu
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-find plasma -name '*.qml' -print0 | sort -z | xargs -0 \
+find plasma -name '*.qml' -print0 | LC_ALL=C sort -z | xargs -0 \
     xgettext --from-code=UTF-8 --language=JavaScript \
     -ki18n:1 -ki18nc:1c,2 -ki18np:1,2 -ki18ncp:1c,2,3 \
     --package-name=tuya-light \

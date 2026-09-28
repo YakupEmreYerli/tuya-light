@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuya-light\n"
 "Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
-"POT-Creation-Date: 2026-09-28 20:04+0300\n"
+"POT-Creation-Date: 2026-09-28 20:40+0300\n"
 "PO-Revision-Date: 2026-09-28 20:00+0300\n"
 "Last-Translator: Yakup Emre Yerli <yakupemreyerli0@gmail.com>\n"
 "Language-Team: Turkish\n"
@@ -30,22 +30,22 @@ msgstr "Sahneler"
 msgid "Device"
 msgstr "Cihaz"
 
-#: plasma/contents/ui/Backend.qml:128 plasma/contents/ui/configGeneral.qml:70
+#: plasma/contents/ui/Backend.qml:131 plasma/contents/ui/configGeneral.qml:70
 msgid "The tuya-light command was not found."
 msgstr "tuya-light komutu bulunamadı."
 
-#: plasma/contents/ui/Backend.qml:137
+#: plasma/contents/ui/Backend.qml:141
 msgid "The light did not answer."
 msgstr "Işık cevap vermedi."
 
-#: plasma/contents/ui/Backend.qml:139
+#: plasma/contents/ui/Backend.qml:143
 msgid "Unexpected answer from tuya-light."
 msgstr "tuya-light beklenmedik bir cevap verdi."
 
 #: plasma/contents/ui/CompactRepresentation.qml:111
-#: plasma/contents/ui/configBehaviour.qml:98
-#: plasma/contents/ui/configScenes.qml:263
-#: plasma/contents/ui/FullRepresentation.qml:213
+#: plasma/contents/ui/FullRepresentation.qml:215
+#: plasma/contents/ui/configBehaviour.qml:101
+#: plasma/contents/ui/configScenes.qml:265
 #, javascript-format
 msgctxt "percentage"
 msgid "%1%"
@@ -55,6 +55,130 @@ msgstr "%%1"
 #: plasma/contents/ui/main.qml:38
 msgid "Off"
 msgstr "Kapalı"
+
+#: plasma/contents/ui/FullRepresentation.qml:83
+msgid "Light"
+msgstr "Işık"
+
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+msgid "Turn off"
+msgstr "Kapat"
+
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+msgid "Turn on"
+msgstr "Aç"
+
+#: plasma/contents/ui/FullRepresentation.qml:111
+msgid "Backend not installed"
+msgstr "Arka uç kurulu değil"
+
+#: plasma/contents/ui/FullRepresentation.qml:112
+msgid "No lights set up yet"
+msgstr "Henüz ışık eklenmedi"
+
+#: plasma/contents/ui/FullRepresentation.qml:113
+msgid "The light is not answering"
+msgstr "Işık cevap vermiyor"
+
+#: plasma/contents/ui/FullRepresentation.qml:115
+msgid ""
+"Install the tuya-light command (see the README), or set its path in the "
+"widget settings."
+msgstr ""
+"tuya-light komutunu kurun (README'ye bakın) ya da yolunu bileşen "
+"ayarlarından girin."
+
+#: plasma/contents/ui/FullRepresentation.qml:117
+msgid ""
+"Run “tuya-light setup” in a terminal once to fetch your bulbs' local keys."
+msgstr ""
+"Ampullerinizin yerel anahtarlarını almak için terminalde bir kez “tuya-light "
+"setup” çalıştırın."
+
+#: plasma/contents/ui/FullRepresentation.qml:118
+msgid ""
+"Is it switched on at the wall and on the same network?\n"
+"%1"
+msgstr ""
+"Anahtardan açık ve aynı ağda mı?\n"
+"%1"
+
+#: plasma/contents/ui/FullRepresentation.qml:121
+msgid "Try again"
+msgstr "Tekrar dene"
+
+#: plasma/contents/ui/FullRepresentation.qml:157
+msgid ""
+"Every section is hidden. Turn some on in the widget's Appearance settings."
+msgstr "Bütün bölümler gizli. Bileşenin Görünüm ayarlarından birkaçını açın."
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+#: plasma/contents/ui/configBehaviour.qml:41
+#: plasma/contents/ui/configScenes.qml:258
+msgid "Brightness"
+msgstr "Parlaklık"
+
+#: plasma/contents/ui/FullRepresentation.qml:249
+#: plasma/contents/ui/configBehaviour.qml:42
+msgid "White temperature"
+msgstr "Beyaz ışık sıcaklığı"
+
+#: plasma/contents/ui/FullRepresentation.qml:267
+msgid "Warm"
+msgstr "Sıcak"
+
+#: plasma/contents/ui/FullRepresentation.qml:267
+msgid "Cool"
+msgstr "Soğuk"
+
+#: plasma/contents/ui/FullRepresentation.qml:267
+msgid "Neutral"
+msgstr "Nötr"
+
+#: plasma/contents/ui/SceneInfo.qml:13
+msgid "Relax"
+msgstr "Rahat"
+
+#: plasma/contents/ui/SceneInfo.qml:14
+msgid "Reading"
+msgstr "Okuma"
+
+#: plasma/contents/ui/SceneInfo.qml:15
+msgid "Focus"
+msgstr "Odak"
+
+#: plasma/contents/ui/SceneInfo.qml:16
+msgid "Movie"
+msgstr "Film"
+
+#: plasma/contents/ui/SceneInfo.qml:17
+msgid "Night"
+msgstr "Gece"
+
+#: plasma/contents/ui/SceneInfo.qml:18
+msgid "Party"
+msgstr "Parti"
+
+#: plasma/contents/ui/SceneInfo.qml:47
+#, javascript-format
+msgid "Colour, %1%"
+msgstr "Renkli, %%1"
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "warm"
+msgstr "sıcak"
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "cool"
+msgstr "soğuk"
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "neutral"
+msgstr "nötr"
+
+#: plasma/contents/ui/SceneInfo.qml:51
+msgid "White, %1, %2%"
+msgstr "Beyaz, %1, %%2"
 
 #: plasma/contents/ui/configAppearance.qml:26
 msgid "Colour wheel"
@@ -171,78 +295,67 @@ msgstr "Simgenin yanında parlaklık yazsın"
 msgid "Add a favourite colour"
 msgstr "Favori renk ekle"
 
-#: plasma/contents/ui/configBehaviour.qml:32
+#: plasma/contents/ui/configBehaviour.qml:35
 msgid "Open the controls"
 msgstr "Kontrolleri aç"
 
-#: plasma/contents/ui/configBehaviour.qml:33
+#: plasma/contents/ui/configBehaviour.qml:36
 msgid "Switch the light on or off"
 msgstr "Işığı aç ya da kapat"
 
-#: plasma/contents/ui/configBehaviour.qml:34
+#: plasma/contents/ui/configBehaviour.qml:37
 msgid "Apply a scene"
 msgstr "Sahne uygula"
 
-#: plasma/contents/ui/configBehaviour.qml:35
-#: plasma/contents/ui/configBehaviour.qml:41
+#: plasma/contents/ui/configBehaviour.qml:38
+#: plasma/contents/ui/configBehaviour.qml:44
 msgid "Nothing"
 msgstr "Hiçbir şey"
 
-#: plasma/contents/ui/configBehaviour.qml:38
-#: plasma/contents/ui/configScenes.qml:256
-#: plasma/contents/ui/FullRepresentation.qml:210
-msgid "Brightness"
-msgstr "Parlaklık"
-
-#: plasma/contents/ui/configBehaviour.qml:39
-#: plasma/contents/ui/FullRepresentation.qml:247
-msgid "White temperature"
-msgstr "Beyaz ışık sıcaklığı"
-
-#: plasma/contents/ui/configBehaviour.qml:40
+#: plasma/contents/ui/configBehaviour.qml:43
 msgid "Colour (turn the wheel)"
 msgstr "Renk (tekerleği çevir)"
 
-#: plasma/contents/ui/configBehaviour.qml:51
+#: plasma/contents/ui/configBehaviour.qml:54
 msgid "Left click:"
 msgstr "Sol tık:"
 
-#: plasma/contents/ui/configBehaviour.qml:58
-#: plasma/contents/ui/configBehaviour.qml:75
+#: plasma/contents/ui/configBehaviour.qml:61
+#: plasma/contents/ui/configBehaviour.qml:78
 msgid "Scene:"
 msgstr "Sahne:"
 
-#: plasma/contents/ui/configBehaviour.qml:68
+#: plasma/contents/ui/configBehaviour.qml:71
 msgid "Middle click:"
 msgstr "Orta tık:"
 
-#: plasma/contents/ui/configBehaviour.qml:86
+#: plasma/contents/ui/configBehaviour.qml:89
 msgid "Scroll wheel:"
 msgstr "Fare tekerleği:"
 
-#: plasma/contents/ui/configBehaviour.qml:94
+#: plasma/contents/ui/configBehaviour.qml:97
 msgid "Step per notch:"
 msgstr "Her çentikte:"
 
-#: plasma/contents/ui/configBehaviour.qml:98
+#: plasma/contents/ui/configBehaviour.qml:101
 msgid "%1°"
 msgstr "%1°"
 
-#: plasma/contents/ui/configBehaviour.qml:104
+#: plasma/contents/ui/configBehaviour.qml:107
 msgid "Reverse the direction"
 msgstr "Yönü ters çevir"
 
-#: plasma/contents/ui/configBehaviour.qml:112
+#: plasma/contents/ui/configBehaviour.qml:115
 msgid ""
-"If the left click no longer opens the controls, they are in the icon's "
-"right-click menu."
+"If the left click no longer opens the controls, they are in the icon's right-"
+"click menu."
 msgstr ""
 "Sol tık artık kontrolleri açmıyorsa, simgeye sağ tıklayınca açılan menüde "
 "bulabilirsiniz."
 
 #: plasma/contents/ui/configGeneral.qml:28
 #: plasma/contents/ui/configGeneral.qml:37
-#: plasma/contents/ui/configScenes.qml:229
+#: plasma/contents/ui/configScenes.qml:231
 msgid "Light:"
 msgstr "Işık:"
 
@@ -289,11 +402,11 @@ msgstr "%1 cevap verdi: %2"
 msgid "No lights set up yet: run “tuya-light setup” in a terminal."
 msgstr "Henüz ışık eklenmedi: terminalde “tuya-light setup” çalıştırın."
 
-#: plasma/contents/ui/configScenes.qml:34
+#: plasma/contents/ui/configScenes.qml:36
 msgid "The change could not be saved."
 msgstr "Değişiklik kaydedilemedi."
 
-#: plasma/contents/ui/configScenes.qml:44
+#: plasma/contents/ui/configScenes.qml:46
 msgid ""
 "Scenes are shared with the tuya-light command and its MCP server. Changes "
 "here are saved immediately."
@@ -301,158 +414,90 @@ msgstr ""
 "Sahneler tuya-light komutu ve MCP sunucusuyla ortaktır. Buradaki "
 "değişiklikler hemen kaydedilir."
 
-#: plasma/contents/ui/configScenes.qml:91
+#: plasma/contents/ui/configScenes.qml:93
 msgid "built in"
 msgstr "hazır"
 
-#: plasma/contents/ui/configScenes.qml:92
+#: plasma/contents/ui/configScenes.qml:94
 msgid "hidden"
 msgstr "gizli"
 
-#: plasma/contents/ui/configScenes.qml:101
-#: plasma/contents/ui/configScenes.qml:291
+#: plasma/contents/ui/configScenes.qml:103
+#: plasma/contents/ui/configScenes.qml:293
 msgid "Try on the light"
 msgstr "Işıkta dene"
 
-#: plasma/contents/ui/configScenes.qml:107
+#: plasma/contents/ui/configScenes.qml:109
 msgid "Edit"
 msgstr "Düzenle"
 
-#: plasma/contents/ui/configScenes.qml:113
+#: plasma/contents/ui/configScenes.qml:115
 msgid "Show in the popup"
 msgstr "Pencerede göster"
 
-#: plasma/contents/ui/configScenes.qml:113
+#: plasma/contents/ui/configScenes.qml:115
 msgid "Hide from the popup"
 msgstr "Pencereden gizle"
 
-#: plasma/contents/ui/configScenes.qml:120
+#: plasma/contents/ui/configScenes.qml:122
 msgid "Delete"
 msgstr "Sil"
 
-#: plasma/contents/ui/configScenes.qml:127
+#: plasma/contents/ui/configScenes.qml:129
 msgid "Restore the original"
 msgstr "İlk hâline döndür"
 
-#: plasma/contents/ui/configScenes.qml:136
+#: plasma/contents/ui/configScenes.qml:138
 msgid "New scene…"
 msgstr "Yeni sahne…"
 
-#: plasma/contents/ui/configScenes.qml:141
+#: plasma/contents/ui/configScenes.qml:143
 msgid "Save the light as a scene…"
 msgstr "Işığı sahne olarak kaydet…"
 
-#: plasma/contents/ui/configScenes.qml:148
+#: plasma/contents/ui/configScenes.qml:150
 msgid "Restore built-in scenes"
 msgstr "Hazır sahneleri geri yükle"
 
-#: plasma/contents/ui/configScenes.qml:156
+#: plasma/contents/ui/configScenes.qml:158
 msgid "Edit scene"
 msgstr "Sahneyi düzenle"
 
-#: plasma/contents/ui/configScenes.qml:156
+#: plasma/contents/ui/configScenes.qml:158
 msgid "New scene"
 msgstr "Yeni sahne"
 
-#: plasma/contents/ui/configScenes.qml:224
+#: plasma/contents/ui/configScenes.qml:226
 msgid "Name:"
 msgstr "Ad:"
 
-#: plasma/contents/ui/configScenes.qml:225
+#: plasma/contents/ui/configScenes.qml:227
 msgid "e.g. Reading nook"
 msgstr "ör. Kitap köşesi"
 
-#: plasma/contents/ui/configScenes.qml:231
+#: plasma/contents/ui/configScenes.qml:233
 msgid "Colour"
 msgstr "Renkli"
 
-#: plasma/contents/ui/configScenes.qml:236
+#: plasma/contents/ui/configScenes.qml:238
 msgid "White"
 msgstr "Beyaz"
 
-#: plasma/contents/ui/configScenes.qml:265
+#: plasma/contents/ui/configScenes.qml:267
 msgid "Warm – cool"
 msgstr "Sıcak – soğuk"
 
-#: plasma/contents/ui/configScenes.qml:285
+#: plasma/contents/ui/configScenes.qml:287
 msgid "Take from the light"
 msgstr "Işıktan al"
 
-#: plasma/contents/ui/configScenes.qml:298
+#: plasma/contents/ui/configScenes.qml:300
 msgid "Cancel"
 msgstr "Vazgeç"
 
-#: plasma/contents/ui/configScenes.qml:302
+#: plasma/contents/ui/configScenes.qml:304
 msgid "Save"
 msgstr "Kaydet"
-
-#: plasma/contents/ui/FullRepresentation.qml:81
-msgid "Light"
-msgstr "Işık"
-
-#: plasma/contents/ui/FullRepresentation.qml:96 plasma/contents/ui/main.qml:65
-msgid "Turn off"
-msgstr "Kapat"
-
-#: plasma/contents/ui/FullRepresentation.qml:96 plasma/contents/ui/main.qml:65
-msgid "Turn on"
-msgstr "Aç"
-
-#: plasma/contents/ui/FullRepresentation.qml:109
-msgid "Backend not installed"
-msgstr "Arka uç kurulu değil"
-
-#: plasma/contents/ui/FullRepresentation.qml:110
-msgid "No lights set up yet"
-msgstr "Henüz ışık eklenmedi"
-
-#: plasma/contents/ui/FullRepresentation.qml:111
-msgid "The light is not answering"
-msgstr "Işık cevap vermiyor"
-
-#: plasma/contents/ui/FullRepresentation.qml:113
-msgid ""
-"Install the tuya-light command (see the README), or set its path in the "
-"widget settings."
-msgstr ""
-"tuya-light komutunu kurun (README'ye bakın) ya da yolunu bileşen "
-"ayarlarından girin."
-
-#: plasma/contents/ui/FullRepresentation.qml:115
-msgid ""
-"Run “tuya-light setup” in a terminal once to fetch your bulbs' local keys."
-msgstr ""
-"Ampullerinizin yerel anahtarlarını almak için terminalde bir kez “tuya-light"
-" setup” çalıştırın."
-
-#: plasma/contents/ui/FullRepresentation.qml:116
-msgid ""
-"Is it switched on at the wall and on the same network?\n"
-"%1"
-msgstr ""
-"Anahtardan açık ve aynı ağda mı?\n"
-"%1"
-
-#: plasma/contents/ui/FullRepresentation.qml:119
-msgid "Try again"
-msgstr "Tekrar dene"
-
-#: plasma/contents/ui/FullRepresentation.qml:155
-msgid ""
-"Every section is hidden. Turn some on in the widget's Appearance settings."
-msgstr "Bütün bölümler gizli. Bileşenin Görünüm ayarlarından birkaçını açın."
-
-#: plasma/contents/ui/FullRepresentation.qml:265
-msgid "Warm"
-msgstr "Sıcak"
-
-#: plasma/contents/ui/FullRepresentation.qml:265
-msgid "Cool"
-msgstr "Soğuk"
-
-#: plasma/contents/ui/FullRepresentation.qml:265
-msgid "Neutral"
-msgstr "Nötr"
 
 #: plasma/contents/ui/main.qml:34
 msgid "Tuya Light"
@@ -484,56 +529,11 @@ msgstr "Kontrolleri göster"
 msgid "Refresh"
 msgstr "Yenile"
 
-#: plasma/contents/ui/SceneInfo.qml:13
-msgid "Relax"
-msgstr "Rahat"
-
-#: plasma/contents/ui/SceneInfo.qml:14
-msgid "Reading"
-msgstr "Okuma"
-
-#: plasma/contents/ui/SceneInfo.qml:15
-msgid "Focus"
-msgstr "Odak"
-
-#: plasma/contents/ui/SceneInfo.qml:16
-msgid "Movie"
-msgstr "Film"
-
-#: plasma/contents/ui/SceneInfo.qml:17
-msgid "Night"
-msgstr "Gece"
-
-#: plasma/contents/ui/SceneInfo.qml:18
-msgid "Party"
-msgstr "Parti"
-
-#: plasma/contents/ui/SceneInfo.qml:47
-#, javascript-format
-msgid "Colour, %1%"
-msgstr "Renkli, %%1"
-
-#: plasma/contents/ui/SceneInfo.qml:50
-msgid "warm"
-msgstr "sıcak"
-
-#: plasma/contents/ui/SceneInfo.qml:50
-msgid "cool"
-msgstr "soğuk"
-
-#: plasma/contents/ui/SceneInfo.qml:50
-msgid "neutral"
-msgstr "nötr"
-
-#: plasma/contents/ui/SceneInfo.qml:51
-msgid "White, %1, %2%"
-msgstr "Beyaz, %1, %%2"
-
 #~ msgid "General"
 #~ msgstr "Genel"
 
 #~ msgid ""
 #~ "Middle-click the panel icon to switch the light, scroll over it to dim."
 #~ msgstr ""
-#~ "Işığı açıp kapatmak için panel simgesine orta tıklayın, kısmak için üzerinde"
-#~ " kaydırın."
+#~ "Işığı açıp kapatmak için panel simgesine orta tıklayın, kısmak için "
+#~ "üzerinde kaydırın."
