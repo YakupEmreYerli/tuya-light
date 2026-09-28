@@ -1,0 +1,24 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "yakupemreyerli0@gmail.com",
+                "Name": "Yakup Emre Yerli",
+                "Name[tr]": "Yakup Emre Yerli"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Control Tuya Wi-Fi bulbs from the panel: colour wheel, brightness, white temperature and scenes, over your local network",
+        "Description[tr]": "Tuya Wi-Fi ampulleri panelden yönetin: renk tekerleği, parlaklık, beyaz ışık sıcaklığı ve sahneler, yerel ağ üzerinden",
+        "Icon": "color-picker",
+        "Id": "com.github.yakupemreyerli.tuyalight",
+        "License": "GPL-2.0-or-later",
+        "Name": "Tuya Light",
+        "Name[tr]": "Tuya Işık",
+        "Version": "0.1.0",
+        "Website": "https://github.com/YakupEmreYerli/tuya-light"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure-Version": 1
+}

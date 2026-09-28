@@ -1,0 +1,191 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the tuya-light package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: tuya-light\n"
+"Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
+"POT-Creation-Date: 2026-09-28 19:45+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: plasma/contents/config/config.qml:6
+msgid "General"
+msgstr ""
+
+#: plasma/contents/ui/Backend.qml:96
+msgid "The tuya-light command was not found."
+msgstr ""
+
+#: plasma/contents/ui/Backend.qml:104
+msgid "The light did not answer."
+msgstr ""
+
+#: plasma/contents/ui/Backend.qml:106
+msgid "Unexpected answer from tuya-light."
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:21
+msgid "Backend command:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:26
+msgid "Device:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:27
+msgid "First in the list"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:31
+msgid "Check the light every:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:34
+msgid "%1 second"
+msgid_plural "%1 seconds"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plasma/contents/ui/configGeneral.qml:39
+msgid "Scroll step:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:42
+#: plasma/contents/ui/FullRepresentation.qml:169
+#, javascript-format
+msgctxt "percentage"
+msgid "%1%"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:48
+msgid "Middle-click the panel icon to switch the light, scroll over it to dim."
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:71
+msgid "Light"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+msgid "Turn off"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+msgid "Turn on"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:100
+msgid "Backend not installed"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:101
+msgid "No lights set up yet"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:102
+msgid "The light is not answering"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:104
+msgid ""
+"Install the tuya-light command (see the README), or set its path in the "
+"widget settings."
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:106
+msgid ""
+"Run “tuya-light setup” in a terminal once to fetch your bulbs' local keys."
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:107
+msgid ""
+"Is it switched on at the wall and on the same network?\n"
+"%1"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:110
+msgid "Try again"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:166
+msgid "Brightness"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:194
+msgid "White temperature"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Warm"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Cool"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Neutral"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:229
+msgid "Relax"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:230
+msgid "Reading"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:231
+msgid "Focus"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:232
+msgid "Movie"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:233
+msgid "Night"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:234
+msgid "Party"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:33
+msgid "Tuya Light"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:35
+msgid "Not set up yet"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:36
+msgid "Not reachable"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:37
+msgid "Off"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:38
+#, javascript-format
+msgid "On, colour, %1%"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:39
+#, javascript-format
+msgid "On, white, %1%"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:62
+msgid "Refresh"
+msgstr ""

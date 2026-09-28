@@ -1,0 +1,194 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: tuya-light\n"
+"Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
+"POT-Creation-Date: 2026-09-28 19:45+0300\n"
+"PO-Revision-Date: 2026-09-28 20:00+0300\n"
+"Last-Translator: Yakup Emre Yerli <yakupemreyerli0@gmail.com>\n"
+"Language-Team: Turkish\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: plasma/contents/config/config.qml:6
+msgid "General"
+msgstr "Genel"
+
+#: plasma/contents/ui/Backend.qml:96
+msgid "The tuya-light command was not found."
+msgstr "tuya-light komutu bulunamadı."
+
+#: plasma/contents/ui/Backend.qml:104
+msgid "The light did not answer."
+msgstr "Işık cevap vermedi."
+
+#: plasma/contents/ui/Backend.qml:106
+msgid "Unexpected answer from tuya-light."
+msgstr "tuya-light beklenmedik bir cevap verdi."
+
+#: plasma/contents/ui/configGeneral.qml:21
+msgid "Backend command:"
+msgstr "Arka uç komutu:"
+
+#: plasma/contents/ui/configGeneral.qml:26
+msgid "Device:"
+msgstr "Cihaz:"
+
+#: plasma/contents/ui/configGeneral.qml:27
+msgid "First in the list"
+msgstr "Listedeki ilk cihaz"
+
+#: plasma/contents/ui/configGeneral.qml:31
+msgid "Check the light every:"
+msgstr "Işığı kontrol etme sıklığı:"
+
+#: plasma/contents/ui/configGeneral.qml:34
+msgid "%1 second"
+msgid_plural "%1 seconds"
+msgstr[0] "%1 saniye"
+msgstr[1] "%1 saniye"
+
+#: plasma/contents/ui/configGeneral.qml:39
+msgid "Scroll step:"
+msgstr "Kaydırma adımı:"
+
+#: plasma/contents/ui/configGeneral.qml:42
+#: plasma/contents/ui/FullRepresentation.qml:169
+#, javascript-format
+msgctxt "percentage"
+msgid "%1%"
+msgstr "%%1"
+
+#: plasma/contents/ui/configGeneral.qml:48
+msgid "Middle-click the panel icon to switch the light, scroll over it to dim."
+msgstr ""
+"Işığı açıp kapatmak için panel simgesine orta tıklayın, kısmak için üzerinde "
+"kaydırın."
+
+#: plasma/contents/ui/FullRepresentation.qml:71
+msgid "Light"
+msgstr "Işık"
+
+#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+msgid "Turn off"
+msgstr "Kapat"
+
+#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+msgid "Turn on"
+msgstr "Aç"
+
+#: plasma/contents/ui/FullRepresentation.qml:100
+msgid "Backend not installed"
+msgstr "Arka uç kurulu değil"
+
+#: plasma/contents/ui/FullRepresentation.qml:101
+msgid "No lights set up yet"
+msgstr "Henüz ışık eklenmedi"
+
+#: plasma/contents/ui/FullRepresentation.qml:102
+msgid "The light is not answering"
+msgstr "Işık cevap vermiyor"
+
+#: plasma/contents/ui/FullRepresentation.qml:104
+msgid ""
+"Install the tuya-light command (see the README), or set its path in the "
+"widget settings."
+msgstr ""
+"tuya-light komutunu kurun (README'ye bakın) ya da yolunu bileşen "
+"ayarlarından girin."
+
+#: plasma/contents/ui/FullRepresentation.qml:106
+msgid ""
+"Run “tuya-light setup” in a terminal once to fetch your bulbs' local keys."
+msgstr ""
+"Ampullerinizin yerel anahtarlarını almak için terminalde bir kez “tuya-light "
+"setup” çalıştırın."
+
+#: plasma/contents/ui/FullRepresentation.qml:107
+msgid ""
+"Is it switched on at the wall and on the same network?\n"
+"%1"
+msgstr ""
+"Anahtardan açık ve aynı ağda mı?\n"
+"%1"
+
+#: plasma/contents/ui/FullRepresentation.qml:110
+msgid "Try again"
+msgstr "Tekrar dene"
+
+#: plasma/contents/ui/FullRepresentation.qml:166
+msgid "Brightness"
+msgstr "Parlaklık"
+
+#: plasma/contents/ui/FullRepresentation.qml:194
+msgid "White temperature"
+msgstr "Beyaz ışık sıcaklığı"
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Warm"
+msgstr "Sıcak"
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Cool"
+msgstr "Soğuk"
+
+#: plasma/contents/ui/FullRepresentation.qml:212
+msgid "Neutral"
+msgstr "Nötr"
+
+#: plasma/contents/ui/FullRepresentation.qml:229
+msgid "Relax"
+msgstr "Rahat"
+
+#: plasma/contents/ui/FullRepresentation.qml:230
+msgid "Reading"
+msgstr "Okuma"
+
+#: plasma/contents/ui/FullRepresentation.qml:231
+msgid "Focus"
+msgstr "Odak"
+
+#: plasma/contents/ui/FullRepresentation.qml:232
+msgid "Movie"
+msgstr "Film"
+
+#: plasma/contents/ui/FullRepresentation.qml:233
+msgid "Night"
+msgstr "Gece"
+
+#: plasma/contents/ui/FullRepresentation.qml:234
+msgid "Party"
+msgstr "Parti"
+
+#: plasma/contents/ui/main.qml:33
+msgid "Tuya Light"
+msgstr "Tuya Işık"
+
+#: plasma/contents/ui/main.qml:35
+msgid "Not set up yet"
+msgstr "Henüz kurulmadı"
+
+#: plasma/contents/ui/main.qml:36
+msgid "Not reachable"
+msgstr "Ulaşılamıyor"
+
+#: plasma/contents/ui/main.qml:37
+msgid "Off"
+msgstr "Kapalı"
+
+#: plasma/contents/ui/main.qml:38
+#, javascript-format
+msgid "On, colour, %1%"
+msgstr "Açık, renkli, %%1"
+
+#: plasma/contents/ui/main.qml:39
+#, javascript-format
+msgid "On, white, %1%"
+msgstr "Açık, beyaz, %%1"
+
+#: plasma/contents/ui/main.qml:62
+msgid "Refresh"
+msgstr "Yenile"
