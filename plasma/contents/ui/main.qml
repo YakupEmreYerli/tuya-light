@@ -18,6 +18,7 @@ PlasmoidItem {
 
     function reload() {
         tuya.listDevices()
+        tuya.listScenes()
         tuya.refresh()
     }
 
@@ -42,16 +43,24 @@ PlasmoidItem {
     compactRepresentation: CompactRepresentation {
         backend: tuya
         root: main
+        cfg: Plasmoid.configuration
     }
 
     fullRepresentation: FullRepresentation {
         backend: tuya
         root: main
+        cfg: Plasmoid.configuration
     }
 
     onExpandedChanged: if (main.expanded) reload()
 
     Plasmoid.contextualActions: [
+        PlasmaCore.Action {
+            text: i18n("Show controls")
+            icon.name: "color-picker"
+            visible: Plasmoid.configuration.leftClick !== "popup"
+            onTriggered: main.expanded = true
+        },
         PlasmaCore.Action {
             text: tuya.light.on ? i18n("Turn off") : i18n("Turn on")
             icon.name: "system-shutdown"
@@ -72,6 +81,7 @@ PlasmoidItem {
         triggeredOnStart: true
         onTriggered: {
             if (tuya.devices.length === 0) tuya.listDevices()
+            if (tuya.allScenes.length === 0) tuya.listScenes()
             tuya.refresh()
         }
     }

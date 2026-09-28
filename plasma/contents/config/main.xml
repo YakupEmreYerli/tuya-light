@@ -3,18 +3,38 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name=""/>
-  <group name="General">
-    <entry name="backendCommand" type="String">
-      <default>tuya-light</default>
+
+  <group name="Device">
+    <entry name="backendCommand" type="String"><default>tuya-light</default></entry>
+    <entry name="device" type="String"><default></default></entry>
+    <entry name="refreshSeconds" type="Int"><default>60</default></entry>
+  </group>
+
+  <group name="Appearance">
+    <!-- Popup sections, in display order; a section missing from the list is hidden. -->
+    <entry name="sections" type="StringList">
+      <default>wheel,brightness,temperature,scenes</default>
     </entry>
-    <entry name="device" type="String">
-      <default></default>
+    <entry name="wheelSize" type="Int"><default>12</default></entry>
+    <entry name="sceneColumns" type="Int"><default>3</default></entry>
+    <entry name="favoriteColours" type="StringList">
+      <default>#ff3b30,#ff9500,#ffcc00,#34c759,#00c7be,#0a84ff,#8e5cff,#ff2d92</default>
     </entry>
-    <entry name="refreshSeconds" type="Int">
-      <default>60</default>
-    </entry>
-    <entry name="wheelStep" type="Int">
-      <default>5</default>
-    </entry>
+    <entry name="iconStyle" type="String"><default>bulb</default></entry>
+    <entry name="tintIcon" type="Bool"><default>true</default></entry>
+    <entry name="dimWhenOff" type="Bool"><default>true</default></entry>
+    <entry name="showPercent" type="Bool"><default>false</default></entry>
+  </group>
+
+  <group name="Behaviour">
+    <!-- popup | toggle | scene | none -->
+    <entry name="leftClick" type="String"><default>popup</default></entry>
+    <entry name="leftScene" type="String"><default></default></entry>
+    <entry name="middleClick" type="String"><default>toggle</default></entry>
+    <entry name="middleScene" type="String"><default></default></entry>
+    <!-- brightness | temperature | hue | none -->
+    <entry name="wheelAction" type="String"><default>brightness</default></entry>
+    <entry name="wheelStep" type="Int"><default>5</default></entry>
+    <entry name="invertWheel" type="Bool"><default>false</default></entry>
   </group>
 </kcfg>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuya-light\n"
 "Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
-"POT-Creation-Date: 2026-09-28 19:45+0300\n"
+"POT-Creation-Date: 2026-09-28 20:04+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,173 +19,505 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: plasma/contents/config/config.qml:6
-msgid "General"
+msgid "Appearance"
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:96
+#: plasma/contents/config/config.qml:11
+msgid "Behaviour"
+msgstr ""
+
+#: plasma/contents/config/config.qml:16
+#: plasma/contents/ui/configAppearance.qml:30
+msgid "Scenes"
+msgstr ""
+
+#: plasma/contents/config/config.qml:21
+msgid "Device"
+msgstr ""
+
+#: plasma/contents/ui/Backend.qml:128 plasma/contents/ui/configGeneral.qml:70
 msgid "The tuya-light command was not found."
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:104
+#: plasma/contents/ui/Backend.qml:137
 msgid "The light did not answer."
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:106
+#: plasma/contents/ui/Backend.qml:139
 msgid "Unexpected answer from tuya-light."
 msgstr ""
 
-#: plasma/contents/ui/configGeneral.qml:21
-msgid "Backend command:"
-msgstr ""
-
-#: plasma/contents/ui/configGeneral.qml:26
-msgid "Device:"
-msgstr ""
-
-#: plasma/contents/ui/configGeneral.qml:27
-msgid "First in the list"
-msgstr ""
-
-#: plasma/contents/ui/configGeneral.qml:31
-msgid "Check the light every:"
-msgstr ""
-
-#: plasma/contents/ui/configGeneral.qml:34
-msgid "%1 second"
-msgid_plural "%1 seconds"
-msgstr[0] ""
-msgstr[1] ""
-
-#: plasma/contents/ui/configGeneral.qml:39
-msgid "Scroll step:"
-msgstr ""
-
-#: plasma/contents/ui/configGeneral.qml:42
-#: plasma/contents/ui/FullRepresentation.qml:169
+#: plasma/contents/ui/CompactRepresentation.qml:111
+#: plasma/contents/ui/configBehaviour.qml:98
+#: plasma/contents/ui/configScenes.qml:263
+#: plasma/contents/ui/FullRepresentation.qml:213
 #, javascript-format
 msgctxt "percentage"
 msgid "%1%"
 msgstr ""
 
-#: plasma/contents/ui/configGeneral.qml:48
-msgid "Middle-click the panel icon to switch the light, scroll over it to dim."
+#: plasma/contents/ui/CompactRepresentation.qml:111
+#: plasma/contents/ui/main.qml:38
+msgid "Off"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:71
+#: plasma/contents/ui/configAppearance.qml:26
+msgid "Colour wheel"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:27
+msgid "Brightness slider"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:28
+msgid "White temperature slider"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:29
+msgid "Favourite colours"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:61
+msgid "Popup"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:65
+msgid "Sections:"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:85
+msgid "Move up"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:92
+msgid "Move down"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:100
+msgid "Colour wheel size:"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:109
+msgid "Small"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:109
+msgid "Medium"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:110
+msgid "Large"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:110
+msgid "Very large"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:116
+msgid "Scene columns:"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:122
+msgid "Favourite colours:"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:153
+msgid "Remove %1"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:160
+msgid "Add a colour"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:165
+msgid ""
+"Click a colour to remove it. Turn on “Favourite colours” above to show them."
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:174
+msgid "Panel icon"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:178
+msgid "Icon:"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:182
+msgid "Bulb"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:183
+msgid "Filled bulb"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:184
+msgid "Lamp"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:185
+msgid "Star"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:210
+msgid "Take the light's colour"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:214
+msgid "Fade the icon while the light is off"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:218
+msgid "Show the brightness next to the icon"
+msgstr ""
+
+#: plasma/contents/ui/configAppearance.qml:224
+msgid "Add a favourite colour"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:32
+msgid "Open the controls"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:33
+msgid "Switch the light on or off"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:34
+msgid "Apply a scene"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:35
+#: plasma/contents/ui/configBehaviour.qml:41
+msgid "Nothing"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:38
+#: plasma/contents/ui/configScenes.qml:256
+#: plasma/contents/ui/FullRepresentation.qml:210
+msgid "Brightness"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:39
+#: plasma/contents/ui/FullRepresentation.qml:247
+msgid "White temperature"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:40
+msgid "Colour (turn the wheel)"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:51
+msgid "Left click:"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:58
+#: plasma/contents/ui/configBehaviour.qml:75
+msgid "Scene:"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:68
+msgid "Middle click:"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:86
+msgid "Scroll wheel:"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:94
+msgid "Step per notch:"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:98
+msgid "%1°"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:104
+msgid "Reverse the direction"
+msgstr ""
+
+#: plasma/contents/ui/configBehaviour.qml:112
+msgid ""
+"If the left click no longer opens the controls, they are in the icon's right-"
+"click menu."
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:28
+#: plasma/contents/ui/configGeneral.qml:37
+#: plasma/contents/ui/configScenes.qml:229
+msgid "Light:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:30
+#: plasma/contents/ui/configGeneral.qml:38
+msgid "First in the list"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:43
+msgid "Check the light every:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:46
+msgid "%1 second"
+msgid_plural "%1 seconds"
+msgstr[0] ""
+msgstr[1] ""
+
+#: plasma/contents/ui/configGeneral.qml:54
+msgid "Backend command:"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:60
+msgid "Test the connection"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:63
+msgid "Asking the light…"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:66
+msgid "on"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:66
+msgid "off"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:66
+msgid "%1 answered: %2"
+msgstr ""
+
+#: plasma/contents/ui/configGeneral.qml:68
+msgid "No lights set up yet: run “tuya-light setup” in a terminal."
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:34
+msgid "The change could not be saved."
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:44
+msgid ""
+"Scenes are shared with the tuya-light command and its MCP server. Changes "
+"here are saved immediately."
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:91
+msgid "built in"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:92
+msgid "hidden"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:101
+#: plasma/contents/ui/configScenes.qml:291
+msgid "Try on the light"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:107
+msgid "Edit"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:113
+msgid "Show in the popup"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:113
+msgid "Hide from the popup"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:120
+msgid "Delete"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:127
+msgid "Restore the original"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:136
+msgid "New scene…"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:141
+msgid "Save the light as a scene…"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:148
+msgid "Restore built-in scenes"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:156
+msgid "Edit scene"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:156
+msgid "New scene"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:224
+msgid "Name:"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:225
+msgid "e.g. Reading nook"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:231
+msgid "Colour"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:236
+msgid "White"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:265
+msgid "Warm – cool"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:285
+msgid "Take from the light"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:298
+msgid "Cancel"
+msgstr ""
+
+#: plasma/contents/ui/configScenes.qml:302
+msgid "Save"
+msgstr ""
+
+#: plasma/contents/ui/FullRepresentation.qml:81
 msgid "Light"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+#: plasma/contents/ui/FullRepresentation.qml:96 plasma/contents/ui/main.qml:65
 msgid "Turn off"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:87 plasma/contents/ui/main.qml:56
+#: plasma/contents/ui/FullRepresentation.qml:96 plasma/contents/ui/main.qml:65
 msgid "Turn on"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:100
+#: plasma/contents/ui/FullRepresentation.qml:109
 msgid "Backend not installed"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:101
+#: plasma/contents/ui/FullRepresentation.qml:110
 msgid "No lights set up yet"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:102
+#: plasma/contents/ui/FullRepresentation.qml:111
 msgid "The light is not answering"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:104
+#: plasma/contents/ui/FullRepresentation.qml:113
 msgid ""
 "Install the tuya-light command (see the README), or set its path in the "
 "widget settings."
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:106
+#: plasma/contents/ui/FullRepresentation.qml:115
 msgid ""
 "Run “tuya-light setup” in a terminal once to fetch your bulbs' local keys."
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:107
+#: plasma/contents/ui/FullRepresentation.qml:116
 msgid ""
 "Is it switched on at the wall and on the same network?\n"
 "%1"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:110
+#: plasma/contents/ui/FullRepresentation.qml:119
 msgid "Try again"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:166
-msgid "Brightness"
+#: plasma/contents/ui/FullRepresentation.qml:155
+msgid ""
+"Every section is hidden. Turn some on in the widget's Appearance settings."
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:194
-msgid "White temperature"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:212
+#: plasma/contents/ui/FullRepresentation.qml:265
 msgid "Warm"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:212
+#: plasma/contents/ui/FullRepresentation.qml:265
 msgid "Cool"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:212
+#: plasma/contents/ui/FullRepresentation.qml:265
 msgid "Neutral"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:229
-msgid "Relax"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:230
-msgid "Reading"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:231
-msgid "Focus"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:232
-msgid "Movie"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:233
-msgid "Night"
-msgstr ""
-
-#: plasma/contents/ui/FullRepresentation.qml:234
-msgid "Party"
-msgstr ""
-
-#: plasma/contents/ui/main.qml:33
+#: plasma/contents/ui/main.qml:34
 msgid "Tuya Light"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:35
+#: plasma/contents/ui/main.qml:36
 msgid "Not set up yet"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:36
-msgid "Not reachable"
-msgstr ""
-
 #: plasma/contents/ui/main.qml:37
-msgid "Off"
-msgstr ""
-
-#: plasma/contents/ui/main.qml:38
-#, javascript-format
-msgid "On, colour, %1%"
+msgid "Not reachable"
 msgstr ""
 
 #: plasma/contents/ui/main.qml:39
 #, javascript-format
+msgid "On, colour, %1%"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:40
+#, javascript-format
 msgid "On, white, %1%"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:62
+#: plasma/contents/ui/main.qml:59
+msgid "Show controls"
+msgstr ""
+
+#: plasma/contents/ui/main.qml:71
 msgid "Refresh"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:13
+msgid "Relax"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:14
+msgid "Reading"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:15
+msgid "Focus"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:16
+msgid "Movie"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:17
+msgid "Night"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:18
+msgid "Party"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:47
+#, javascript-format
+msgid "Colour, %1%"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "warm"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "cool"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:50
+msgid "neutral"
+msgstr ""
+
+#: plasma/contents/ui/SceneInfo.qml:51
+msgid "White, %1, %2%"
 msgstr ""

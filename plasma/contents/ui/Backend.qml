@@ -4,8 +4,9 @@
 */
 
 // Runs the `tuya-light` command-line backend and keeps the last known state.
-// One command at a time: while one runs, newer writes replace each other, so
-// dragging a slider sends the first and the last value, not every step.
+// Light commands go one at a time: while one runs, newer ones replace each
+// other, so dragging a slider sends the first and the last value, not every
+// step. Scene edits and lists run alongside, each with its own callback.
 
 import QtQuick
 import org.kde.plasma.plasma5support as P5Support
@@ -18,6 +19,8 @@ Item {
 
     property var light: ({})
     property var devices: []
+    property var scenes: []        // visible scenes, as `tuya-light scenes --json`
+    property var allScenes: []     // including hidden ones
     property bool busy: false
     property bool loaded: false
     property bool needsSetup: false
@@ -27,27 +30,28 @@ Item {
     readonly property bool online: loaded && light.online === true
 
     property string _pending: ""
-    property var _kinds: ({})
+    property var _jobs: ({})
 
-    function _quote(s) {
+    function quote(s) {
         return "'" + String(s).replace(/'/g, "'\\''") + "'"
     }
 
     function _base() {
         let c = command + " --json"
         if (device.length > 0) {
-            c += " -d " + _quote(device)
+            c += " -d " + quote(device)
         }
         return c
     }
 
+    // A light command; its answer becomes the new `light`.
     function send(args) {
         const cmd = _base() + " " + args
         if (busy) {
             _pending = cmd
             return
         }
-        _run(cmd, "state")
+        _run(cmd, { kind: "state" })
     }
 
     function refresh() {
@@ -57,37 +61,65 @@ Item {
     }
 
     function listDevices() {
-        _run(command + " --json devices", "devices")
+        _run(command + " --json devices", { kind: "devices" })
     }
 
-    function _run(cmd, kind) {
-        if (kind === "state") {
+    function listScenes() {
+        _run(command + " --json scenes --all", { kind: "scenes" })
+    }
+
+    // Anything else (scene edits): callback(ok, parsedJson, stderr).
+    function call(args, callback) {
+        _run(_base() + " " + args, { kind: "call", callback: callback })
+    }
+
+    function _run(cmd, job) {
+        if (job.kind === "state") {
             busy = true
         }
         // A unique shell comment makes every call a new source, so an
         // identical command issued twice still runs twice.
         const src = cmd + " #" + Date.now() + Math.random().toString(36).slice(2, 6)
-        _kinds[src] = kind
+        _jobs[src] = job
         exec.connectSource(src)
     }
 
+    function _parse(out) {
+        try {
+            return out.length ? JSON.parse(out.split("\n").pop()) : null
+        } catch (e) {
+            return null
+        }
+    }
+
     function _finish(source, data) {
-        const kind = _kinds[source]
-        delete _kinds[source]
+        const job = _jobs[source] || { kind: "call" }
+        delete _jobs[source]
         exec.disconnectSource(source)
 
         const code = data["exit code"]
         const out = String(data["stdout"] || "").trim()
-        missingBackend = code === 127
-        let parsed = null
-        try {
-            parsed = out.length ? JSON.parse(out.split("\n").pop()) : null
-        } catch (e) {
-            parsed = null
+        const err = String(data["stderr"] || "").trim()
+        const parsed = _parse(out)
+        if (code === 127) {
+            missingBackend = true
         }
 
-        if (kind === "devices") {
+        if (job.kind === "devices") {
             devices = Array.isArray(parsed) ? parsed : []
+            return
+        }
+        if (job.kind === "scenes") {
+            if (Array.isArray(parsed)) {
+                allScenes = parsed
+                scenes = parsed.filter(s => !s.hidden)
+            }
+            return
+        }
+        if (job.kind === "call") {
+            if (job.callback) {
+                job.callback(code === 0, parsed, err)
+            }
             return
         }
 
@@ -99,17 +131,18 @@ Item {
             error = parsed.error || ""
         } else if (parsed) {
             needsSetup = false
+            missingBackend = false
             light = parsed
             loaded = true
             error = parsed.online ? "" : (parsed.error || i18n("The light did not answer."))
         } else {
-            error = String(data["stderr"] || "").trim() || i18n("Unexpected answer from tuya-light.")
+            error = err || i18n("Unexpected answer from tuya-light.")
         }
 
         if (_pending.length > 0) {
             const next = _pending
             _pending = ""
-            _run(next, "state")
+            _run(next, { kind: "state" })
         }
     }
 
