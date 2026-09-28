@@ -30,8 +30,9 @@ tools/preview.py /tmp/shots        # renders the popup off-screen; look at the P
 - **Scenes belong to the backend.** They live in `scenes.json` and go through `tuya_light/scenes.py`, which stores only differences from the built-ins. The widget edits them by running `tuya-light scene-save/remove/...`; don't copy them into the widget's own settings, or the CLI and MCP server stop seeing the same list.
 - **Widget settings are passed in, not read.** `FullRepresentation` and `CompactRepresentation` take `cfg` (Plasmoid.configuration) as a property, which is what lets `tools/preview.py` render them with a stand-in. Keep new settings on that path.
 - **Previews render in software.** `tools/preview.py` uses the software scene graph, where tinted (mask) icons come out untinted; that is the renderer, not the widget. `tools/preview.py OUT --config configScenes` renders a settings tab.
-- **Every command prints the state afterwards.** The widget relies on this to avoid a second call; keep it true for new commands.
-- **No shell interpolation of user input in QML.** Device names go through `_quote()` in `Backend.qml`.
+- **Every command that touches a bulb prints the state afterwards.** The widget relies on this to avoid a second call; keep it true for new light commands. Scene commands print the scene instead.
+- **Only the Device tab owns `backendCommand` and `device`.** Other settings tabs read them from `Plasmoid.configuration` and must not declare `cfg_backendCommand`/`cfg_device`, or applying them could write an older value back.
+- **No shell interpolation of user input in QML.** Device and scene names go through `quote()` in `Backend.qml`.
 
 ## Translations
 

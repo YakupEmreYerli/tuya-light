@@ -15,7 +15,7 @@ Telefon uygulaması her dokunuşta Tuya'nın bulutuna gider. Tuya Light ise ampu
 - **Panel bileşeni.** Ampulün o anki rengini alan bir simge. Tıklayınca renk tekerleği, parlaklık çubuğu, sıcaktan soğuğa beyaz ışık çubuğu, favori renkler ve sahneleriniz açılır. Birden fazla ampul varsa üstte seçici çıkar.
 - **Kendi sahneleriniz.** Bileşenin ayarlarından sahne ekleyin, düzenleyin, gizleyin, silin ya da ışığın o anki hâlini sahne olarak kaydedin. Hazır sahneler de düzenlenir ve ilk hâline döner. Komut satırı ve MCP sunucusu aynı listeyi görür.
 - **İstediğiniz gibi.** Pencerede hangi bölümlerin hangi sırayla görüneceği, teker boyutu, sahne sütunları ve favori renkler; sol tık, orta tık ve fare tekerleğinin ne yapacağı (aç, aç/kapat, bir sahne; parlaklık, sıcaklık ya da renk); panel simgesi (dört şekil, renkli ya da değil, kapalıyken soluk, yanında parlaklık).
-- **Komut satırı.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Her komut ampulün son durumunu yazar, `--json` ile makinenin okuyacağı biçimde.
+- **Komut satırı.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Ampule dokunan her komut ampulün son durumunu yazar, `--json` ile makinenin okuyacağı biçimde.
 - **MCP sunucusu.** `tuya-light mcp` aynı kontrolleri araç olarak sunar; Claude gibi bir asistana "ışığı biraz ısıt" ya da "film modu" demek yeter.
 - **İki ampul nesli.** Eski (veri noktaları 1-5) ve yeni (20-24) ampuller; 3.1'den 3.5'e protokol sürümleri, [tinytuya](https://github.com/jasonacox/tinytuya) üzerinden.
 - **Hazır sahneler:** Rahat, Okuma, Odak, Film, Gece, Parti.
@@ -57,7 +57,7 @@ Her Tuya ampulü yerel trafiğini yalnızca Tuya bulutunun bildiği, cihaza öze
 
 Ücretsiz IoT Core denemesi bir ay sürer, sonra bulut "subscription has expired" cevabı verir. Yerel kontrol bundan etkilenmez. Buluta yeniden ancak bir ampul sıfırlanıp tekrar eşleştirilirse gerek olur, çünkü anahtarı değişir. Deneme süresi **Cloud → Cloud Services → IoT Core → Extend Trial Period** yolundan ücretsiz uzatılabilir.
 
-`python -m tinytuya wizard` ile üretilmiş bir `devices.json` olduğu gibi çalışır.
+`python -m tinytuya wizard` ile üretilmiş bir `devices.json` olduğu gibi çalışır. İçinde yerel anahtarlar olduğu için tuya-light onu ilk okuduğunda yalnızca sizin okuyabileceğiniz hâle (0600) getirir ve bunu söyler.
 
 ## Komut satırı
 
@@ -79,7 +79,7 @@ tuya-light [-d CİHAZ] [--json] KOMUT
 | `scene-hide AD`, `scene-show AD` | Listelerden ve bileşenden gizler, geri gösterir |
 | `scene-reset [AD]` | Hazır sahneleri ilk hâline döndürür |
 | `devices`, `scenes [--all]` | Tanımlı olanları listeler (`--all` gizli sahneleri de gösterir) |
-| `setup` | Yerel anahtarları buluttan alır (bir kez) |
+| `setup [--region B] [--device-id KİMLİK] [--all]` | Yerel anahtarları buluttan alır (bir kez). `--device-id` soruyu atlar; `--all` ışık dışı cihazları da tutar |
 | `mcp` | MCP sunucusunu stdio üzerinde çalıştırır |
 
 `-d` cihaz kimliği ya da adı alır, verilmezse listedeki ilk cihaz. Çıkış kodları: 0 tamam, 2 ışık cevap vermedi, 3 cihaz listesi yok.
@@ -89,6 +89,7 @@ Sahneler `~/.config/tuya-light/scenes.json` dosyasında durur; dosyada yalnızca
 ```bash
 tuya-light scene-save "Kitap köşesi" --white 30 --brightness 80
 tuya-light scene-save "Gün batımı" --colour '#ff6a2a' --brightness 70
+tuya-light scene-save "Koyu mavi" --colour "230 80" --brightness 40   # renk tonu, doygunluk
 tuya-light scene-save "Şu an" --current
 tuya-light scene "kitap köşesi"
 ```

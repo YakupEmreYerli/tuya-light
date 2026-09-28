@@ -15,7 +15,7 @@ The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb'
 - **Panel widget.** A bulb icon that takes the light's current colour. Click for a colour wheel, a brightness slider, a warm-to-cool white slider, favourite colours and your scenes. Several bulbs get a picker at the top.
 - **Your own scenes.** Create, edit, hide and delete scenes in the widget's settings, or save whatever the light shows right now. Built-in ones can be edited and restored. The command line and the MCP server see the same list.
 - **Make it yours.** Choose which popup sections appear and in what order, the wheel size, scene columns and favourite colours; what left click, middle click and the scroll wheel do (open, switch, a scene; brightness, warmth or colour); the panel icon (four shapes, tinted or not, dimmed when off, with the brightness next to it).
-- **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command prints the resulting state; `--json` makes it machine-readable.
+- **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command that touches a bulb prints its resulting state; `--json` makes it machine-readable.
 - **MCP server.** `tuya-light mcp` exposes the same controls as tools, so an assistant such as Claude can answer "make the light warmer" or "movie mode".
 - **Both bulb generations.** Older bulbs (data points 1-5) and newer ones (20-24) are decoded; protocol versions 3.1 to 3.5 through [tinytuya](https://github.com/jasonacox/tinytuya).
 - **Built-in scenes:** Relax, Reading, Focus, Movie, Night, Party.
@@ -57,7 +57,7 @@ Every Tuya bulb encrypts its local traffic with a per-device key that only the T
 
 The free IoT Core trial lasts a month; after that the cloud answers "subscription has expired". Local control is unaffected. You only need the cloud again if a bulb is reset and re-paired, which changes its key; the trial can be extended for free from **Cloud → Cloud Services → IoT Core → Extend Trial Period**.
 
-A `devices.json` written by `python -m tinytuya wizard` works as is.
+A `devices.json` written by `python -m tinytuya wizard` works as is. It holds the local keys, so tuya-light makes it readable only by you (0600) the first time it reads it, and says so.
 
 ## Command line
 
@@ -79,7 +79,7 @@ tuya-light [-d DEVICE] [--json] COMMAND
 | `scene-hide NAME`, `scene-show NAME` | Hide from lists and the widget, or show again |
 | `scene-reset [NAME]` | Restore built-in scenes to their original form |
 | `devices`, `scenes [--all]` | List what is configured (`--all` includes hidden scenes) |
-| `setup` | Fetch local keys from the cloud (once) |
+| `setup [--region R] [--device-id ID] [--all]` | Fetch local keys from the cloud (once). `--device-id` skips the prompt; `--all` keeps non-light devices too |
 | `mcp` | Run the MCP server on stdio |
 
 `-d` takes a device id or name and defaults to the first device. Exit codes: 0 done, 2 the light did not answer, 3 no device list yet.
@@ -89,6 +89,7 @@ Scenes are stored in `~/.config/tuya-light/scenes.json`, which holds only what d
 ```bash
 tuya-light scene-save "Reading nook" --white 30 --brightness 80
 tuya-light scene-save "Sunset" --colour '#ff6a2a' --brightness 70
+tuya-light scene-save "Deep blue" --colour "230 80" --brightness 40   # hue saturation
 tuya-light scene-save "Right now" --current
 tuya-light scene "reading nook"
 ```

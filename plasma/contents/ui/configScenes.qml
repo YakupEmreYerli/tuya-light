@@ -12,17 +12,19 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
+import org.kde.plasma.plasmoid
 
 KCM.ScrollViewKCM {
     id: page
 
-    property string cfg_backendCommand: "tuya-light"
-    property string cfg_device: ""
+    // Read, never declared as cfg_: only the Device tab owns these settings, so
+    // applying this tab can never write an older value over them.
+    readonly property var saved: Plasmoid.configuration
 
     Backend {
         id: backend
-        command: page.cfg_backendCommand || "tuya-light"
-        device: page.cfg_device
+        command: (page.saved && page.saved.backendCommand) || "tuya-light"
+        device: (page.saved && page.saved.device) || ""
         Component.onCompleted: { listScenes(); refresh() }
     }
     SceneInfo { id: sceneInfo }

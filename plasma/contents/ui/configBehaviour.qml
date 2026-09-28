@@ -8,6 +8,7 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
+import org.kde.plasma.plasmoid
 
 KCM.SimpleKCM {
     id: page
@@ -19,11 +20,13 @@ KCM.SimpleKCM {
     property string cfg_wheelAction: "brightness"
     property alias cfg_wheelStep: step.value
     property alias cfg_invertWheel: invert.checked
-    property string cfg_backendCommand: "tuya-light"
+    // Read, never declared as cfg_: only the Device tab owns these settings, so
+    // applying this tab can never write an older value over them.
+    readonly property var saved: Plasmoid.configuration
 
     Backend {
         id: backend
-        command: page.cfg_backendCommand || "tuya-light"
+        command: (page.saved && page.saved.backendCommand) || "tuya-light"
         Component.onCompleted: listScenes()
     }
     SceneInfo { id: sceneInfo }
