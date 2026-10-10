@@ -31,8 +31,33 @@ jobs:
         run: |
           tuya-light --version
           tuya-light scenes
+          tuya-light serve --help > /dev/null
           set +e; tuya-light --json state; code=$?; set -e
           test "$code" = 3   # no device list yet
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build
+        run: docker build -t tuya-light:ci .
+      - name: Compose file
+        run: docker compose --profile home --profile cloud config --quiet
+      - name: Smoke test
+        run: |
+          docker run --rm tuya-light:ci --version
+          set +e; docker run --rm tuya-light:ci --json state; code=$?; set -e
+          test "$code" = 3   # no device list yet
+          docker run -d --name tl -p 127.0.0.1:8892:8892 tuya-light:ci
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            curl -fsS -o /dev/null http://127.0.0.1:8892/icon.svg && break
+            sleep 1
+          done
+          curl -fsS -o /dev/null http://127.0.0.1:8892/
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8892/api/state)" = 401
+          test "$(docker exec tl id -u)" != 0
+          docker rm -f tl
 
   widget:
     name: Plasma widget
@@ -63,6 +88,7 @@ jobs:
           kpackagetool6 --type Plasma/Applet --show com.github.yakupemreyerli.tuyalight
       - name: Files named in the README exist
         run: |
-          for f in docs/banner.png docs/brand/logo.svg install.sh CONTRIBUTING.md LICENSE README.tr.md; do
+          for f in docs/banner.png docs/brand/logo.svg docs/screenshots/phone.png install.sh \
+                   Dockerfile compose.yaml CONTRIBUTING.md LICENSE README.tr.md; do
             test -e "$f" || { echo "missing: $f"; exit 1; }
           done
