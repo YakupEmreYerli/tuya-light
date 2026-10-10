@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuya-light\n"
 "Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
-"POT-Creation-Date: 2026-09-28 20:40+0300\n"
+"POT-Creation-Date: 2026-10-10 17:47+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,15 +35,15 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:131 plasma/contents/ui/configGeneral.qml:70
+#: plasma/contents/ui/Backend.qml:152 plasma/contents/ui/configGeneral.qml:70
 msgid "The tuya-light command was not found."
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:141
+#: plasma/contents/ui/Backend.qml:162
 msgid "The light did not answer."
 msgstr ""
 
-#: plasma/contents/ui/Backend.qml:143
+#: plasma/contents/ui/Backend.qml:164
 msgid "Unexpected answer from tuya-light."
 msgstr ""
 
@@ -57,7 +57,7 @@ msgid "%1%"
 msgstr ""
 
 #: plasma/contents/ui/CompactRepresentation.qml:111
-#: plasma/contents/ui/main.qml:38
+#: plasma/contents/ui/main.qml:87
 msgid "Off"
 msgstr ""
 
@@ -65,11 +65,11 @@ msgstr ""
 msgid "Light"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:114
 msgid "Turn off"
 msgstr ""
 
-#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:114
 msgid "Turn on"
 msgstr ""
 
@@ -492,32 +492,32 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:34
+#: plasma/contents/ui/main.qml:83
 msgid "Tuya Light"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:36
+#: plasma/contents/ui/main.qml:85
 msgid "Not set up yet"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:37
+#: plasma/contents/ui/main.qml:86
 msgid "Not reachable"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:39
+#: plasma/contents/ui/main.qml:88
 #, javascript-format
 msgid "On, colour, %1%"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:40
+#: plasma/contents/ui/main.qml:89
 #, javascript-format
 msgid "On, white, %1%"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:59
+#: plasma/contents/ui/main.qml:108
 msgid "Show controls"
 msgstr ""
 
-#: plasma/contents/ui/main.qml:71
+#: plasma/contents/ui/main.qml:120
 msgid "Refresh"
 msgstr ""

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tuya-light\n"
 "Report-Msgid-Bugs-To: https://github.com/YakupEmreYerli/tuya-light/issues\n"
-"POT-Creation-Date: 2026-09-28 20:40+0300\n"
+"POT-Creation-Date: 2026-10-10 17:47+0300\n"
 "PO-Revision-Date: 2026-09-28 20:00+0300\n"
 "Last-Translator: Yakup Emre Yerli <yakupemreyerli0@gmail.com>\n"
 "Language-Team: Turkish\n"
@@ -30,15 +30,15 @@ msgstr "Sahneler"
 msgid "Device"
 msgstr "Cihaz"
 
-#: plasma/contents/ui/Backend.qml:131 plasma/contents/ui/configGeneral.qml:70
+#: plasma/contents/ui/Backend.qml:152 plasma/contents/ui/configGeneral.qml:70
 msgid "The tuya-light command was not found."
 msgstr "tuya-light komutu bulunamadı."
 
-#: plasma/contents/ui/Backend.qml:141
+#: plasma/contents/ui/Backend.qml:162
 msgid "The light did not answer."
 msgstr "Işık cevap vermedi."
 
-#: plasma/contents/ui/Backend.qml:143
+#: plasma/contents/ui/Backend.qml:164
 msgid "Unexpected answer from tuya-light."
 msgstr "tuya-light beklenmedik bir cevap verdi."
 
@@ -52,7 +52,7 @@ msgid "%1%"
 msgstr "%%1"
 
 #: plasma/contents/ui/CompactRepresentation.qml:111
-#: plasma/contents/ui/main.qml:38
+#: plasma/contents/ui/main.qml:87
 msgid "Off"
 msgstr "Kapalı"
 
@@ -60,11 +60,11 @@ msgstr "Kapalı"
 msgid "Light"
 msgstr "Işık"
 
-#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:114
 msgid "Turn off"
 msgstr "Kapat"
 
-#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:65
+#: plasma/contents/ui/FullRepresentation.qml:98 plasma/contents/ui/main.qml:114
 msgid "Turn on"
 msgstr "Aç"
 
@@ -499,33 +499,33 @@ msgstr "Vazgeç"
 msgid "Save"
 msgstr "Kaydet"
 
-#: plasma/contents/ui/main.qml:34
+#: plasma/contents/ui/main.qml:83
 msgid "Tuya Light"
 msgstr "Tuya Işık"
 
-#: plasma/contents/ui/main.qml:36
+#: plasma/contents/ui/main.qml:85
 msgid "Not set up yet"
 msgstr "Henüz kurulmadı"
 
-#: plasma/contents/ui/main.qml:37
+#: plasma/contents/ui/main.qml:86
 msgid "Not reachable"
 msgstr "Ulaşılamıyor"
 
-#: plasma/contents/ui/main.qml:39
+#: plasma/contents/ui/main.qml:88
 #, javascript-format
 msgid "On, colour, %1%"
 msgstr "Açık, renkli, %%1"
 
-#: plasma/contents/ui/main.qml:40
+#: plasma/contents/ui/main.qml:89
 #, javascript-format
 msgid "On, white, %1%"
 msgstr "Açık, beyaz, %%1"
 
-#: plasma/contents/ui/main.qml:59
+#: plasma/contents/ui/main.qml:108
 msgid "Show controls"
 msgstr "Kontrolleri göster"
 
-#: plasma/contents/ui/main.qml:71
+#: plasma/contents/ui/main.qml:120
 msgid "Refresh"
 msgstr "Yenile"
 
