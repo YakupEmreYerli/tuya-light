@@ -17,7 +17,7 @@ The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb'
 - **Make it yours.** Choose which popup sections appear and in what order, the wheel size, scene columns and favourite colours; what left click, middle click and the scroll wheel do (open, switch, a scene; brightness, warmth or colour); the panel icon (four shapes, tinted or not, dimmed when off, with the brightness next to it).
 - **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command that touches a bulb prints its resulting state; `--json` makes it machine-readable.
 - **MCP server.** `tuya-light mcp` exposes the same controls as tools, so an assistant such as Claude can answer "make the light warmer" or "movie mode".
-- **Phone page.** `tuya-light serve` puts the same controls on one screen for a phone held in one hand: a big on/off, brightness, warm to cool, colours and your scenes. Add it to the iPhone's Home Screen and it opens like an app. Optional.
+- **Phone page.** `tuya-light serve` puts the widget's popup on a phone screen: the switch, the colour wheel, brightness and white temperature, and your scenes, sized for one thumb. Add it to the iPhone's Home Screen and it opens like an app. Optional.
 - **Runs where you want.** On your PC, on an always-on box at home (systemd or Docker), or on a rented server through Tuya's cloud API. See [Where it runs](#where-it-runs).
 - **Both bulb generations.** Older bulbs (data points 1-5) and newer ones (20-24) are decoded; protocol versions 3.1 to 3.5 through [tinytuya](https://github.com/jasonacox/tinytuya).
 - **Built-in scenes:** Relax, Reading, Focus, Movie, Night, Party.
@@ -60,9 +60,9 @@ Each device follows, strongest first: `tuya-light --transport local|cloud`, `"tr
 
 ## On your phone
 
-`tuya-light serve` serves a one-screen page for the phone: a big on/off, brightness, warm to cool, a few colours and a full picker, and your scenes as large buttons. It follows the phone's light or dark mode and shows the light's state as it changes.
+`tuya-light serve` serves the widget's popup as a one-screen page for the phone: the light's name and switch, the colour wheel, the brightness and white temperature sliders, and your scenes. It follows the phone's light or dark mode and shows the light's state as it changes.
 
-![The phone page in light and dark mode: the light's state and an on/off switch at the top, brightness and white-light sliders, colour swatches, and six scenes](docs/screenshots/phone.png)
+![The phone page in light and dark mode: the light's name and switch at the top, the colour wheel, brightness and white temperature sliders, and six scenes in three columns](docs/screenshots/phone.png)
 
 1. On the PC: `./install.sh --web`. It installs `tuya-light[web]` and a systemd user service, `tuya-light-serve`, that starts at login and restarts if it fails (port 8892, all network interfaces).
 2. `tuya-light serve --pair` prints a link for each address of the PC, your home network and Tailscale (100.x) if you use it, with a QR code for each.

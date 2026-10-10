@@ -3,15 +3,15 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-// The phone page. It talks to `tuya-light serve` and keeps the widget's
-// rules: one light command at a time, a newer command replaces one that is
-// still waiting, and the controls never jump back to an answer that is
-// already out of date.
+// The phone page: the panel widget's popup, for a phone. It talks to
+// `tuya-light serve` and keeps the widget's rules: one light command at a
+// time, a newer command replaces one that is still waiting, and the controls
+// never jump back to an answer that is already out of date.
 //
 // A light reached through the Tuya cloud costs an API call per request, so
-// for those the page sends a slider's value only where the drag stops, asks
-// for the state less often (the server says how often), and stops asking
-// after five quiet minutes until the page is touched or shown again.
+// for those the page sends a value only where a drag stops, asks for the
+// state less often (the server says how often), and stops asking after five
+// quiet minutes until the page is touched or shown again.
 
 const POLL_MS = 4000
 const IDLE_MS = 5 * 60 * 1000
@@ -19,49 +19,35 @@ const RETRY_MS = 5000
 const POLL_TIMEOUT_MS = 12000
 const SEND_TIMEOUT_MS = 25000
 
-// The widget's default favourites, without yellow and teal, so that seven
-// targets fit a phone's width at 44 points each.
-const SWATCHES = [
-    ['red', '#ff3b30'], ['orange', '#ff9500'], ['green', '#34c759'],
-    ['blue', '#0a84ff'], ['purple', '#8e5cff'], ['pink', '#ff2d92'],
-]
-
 const STRINGS = {
     en: {
         light: 'Light',
-        off: 'Off',
-        tapToTurnOn: 'Tap to turn on',
-        brightnessIs: 'Brightness %1',
+        power: 'Light on',
+        colour: 'Colour',
         brightness: 'Brightness',
-        white: 'White light',
+        white: 'White temperature',
         warm: 'Warm', neutral: 'Neutral', cool: 'Cool',
-        warmWhite: 'warm white', neutralWhite: 'neutral white', coolWhite: 'cool white',
-        effect: 'Light effect',
-        effectDetail: 'Set in the Tuya app',
-        pale: 'pale %1',
-        colours: 'Colours',
-        moreColours: 'More colours',
         scenes: 'Scenes',
+        viaCloud: 'Tuya cloud',
         connecting: 'Connecting…',
-        viaCloud: 'Through the Tuya cloud',
         pcTitle: "Can't reach your computer",
         pcText: 'Is it switched on and awake? This phone has to be on your home Wi-Fi, or connected to Tailscale.',
         bulbTitle: 'The light is not answering',
-        bulbText: 'Is it switched on at the wall and on the same network as the computer?',
+        bulbText: 'Is it switched on at the wall and on the same network?',
         unpairedTitle: 'This phone is not paired yet',
         unpairedText: 'On the computer, run `tuya-light serve --pair` and open the link it shows on this phone.',
         badKeyTitle: 'That pairing link no longer works',
         badKeyText: 'The key has been changed. Run `tuya-light serve --pair` on the computer for a new link. If this is the Home Screen app, delete it and add it again from the new link.',
         setupTitle: 'No lights set up yet',
-        setupText: 'On the computer, run `tuya-light setup` once to fetch your bulbs’ local keys.',
+        setupText: 'Run `tuya-light setup` on the computer once to fetch your bulbs’ local keys.',
         refusedTitle: 'The computer turned this page away',
         errorTitle: 'Something went wrong on the computer',
         tryAgain: 'Try again',
         addHint: 'To keep this on your Home Screen, tap Share, then Add to Home Screen.',
         dismiss: 'Close',
         names: {
-            red: 'red', orange: 'orange', yellow: 'yellow', green: 'green',
-            cyan: 'cyan', blue: 'blue', purple: 'purple', pink: 'pink',
+            red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green',
+            cyan: 'Cyan', blue: 'Blue', purple: 'Purple', pink: 'Pink',
         },
         builtins: {
             relax: 'Relax', reading: 'Reading', focus: 'Focus',
@@ -70,25 +56,18 @@ const STRINGS = {
     },
     tr: {
         light: 'Işık',
-        off: 'Kapalı',
-        tapToTurnOn: 'Açmak için dokunun',
-        brightnessIs: 'Parlaklık %1',
+        power: 'Işık açık',
+        colour: 'Renk',
         brightness: 'Parlaklık',
-        white: 'Beyaz ışık',
+        white: 'Beyaz ışık sıcaklığı',
         warm: 'Sıcak', neutral: 'Nötr', cool: 'Soğuk',
-        warmWhite: 'sıcak beyaz', neutralWhite: 'nötr beyaz', coolWhite: 'soğuk beyaz',
-        effect: 'Işık efekti',
-        effectDetail: 'Tuya uygulamasından ayarlandı',
-        pale: 'açık %1',
-        colours: 'Renkler',
-        moreColours: 'Başka bir renk',
         scenes: 'Sahneler',
+        viaCloud: 'Tuya bulutu',
         connecting: 'Bağlanıyor…',
-        viaCloud: 'Tuya bulutu üzerinden',
         pcTitle: 'Bilgisayara ulaşılamıyor',
         pcText: 'Bilgisayar açık ve uyanık mı? Telefon evdeki Wi-Fi’a ya da Tailscale’e bağlı olmalı.',
         bulbTitle: 'Işık cevap vermiyor',
-        bulbText: 'Anahtardan açık mı, bilgisayarla aynı ağda mı?',
+        bulbText: 'Anahtardan açık ve aynı ağda mı?',
         unpairedTitle: 'Bu telefon henüz eşleşmedi',
         unpairedText: 'Bilgisayarda `tuya-light serve --pair` komutunu çalıştırın, gösterdiği bağlantıyı bu telefonda açın.',
         badKeyTitle: 'Bu eşleştirme bağlantısı artık geçmiyor',
@@ -101,8 +80,8 @@ const STRINGS = {
         addHint: 'Ana Ekran’a eklemek için Paylaş’a, sonra Ana Ekrana Ekle’ye dokunun.',
         dismiss: 'Kapat',
         names: {
-            red: 'kırmızı', orange: 'turuncu', yellow: 'sarı', green: 'yeşil',
-            cyan: 'camgöbeği', blue: 'mavi', purple: 'mor', pink: 'pembe',
+            red: 'Kırmızı', orange: 'Turuncu', yellow: 'Sarı', green: 'Yeşil',
+            cyan: 'Camgöbeği', blue: 'Mavi', purple: 'Mor', pink: 'Pembe',
         },
         builtins: {
             relax: 'Rahat', reading: 'Okuma', focus: 'Odak',
@@ -113,7 +92,6 @@ const STRINGS = {
 
 const lang = (navigator.language || 'en').toLowerCase().startsWith('tr') ? 'tr' : 'en'
 const S = STRINGS[lang]
-const fmt = (text, ...args) => args.reduce((s, a, i) => s.replace(`%${i + 1}`, a), text)
 const pct = n => (lang === 'tr' ? `%${Math.round(n)}` : `${Math.round(n)}%`)
 
 const $ = id => document.getElementById(id)
@@ -139,62 +117,35 @@ const ui = {
     idle: false,
 }
 
-// -- colour helpers ------------------------------------------------------
+// -- colour helpers (the widget's SceneInfo.qml and ColorWheel.qml) ----------
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
+const hex = channels => '#' + channels.map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
 
 function hsvToHex(h, s, v) {
     const f = n => {
         const k = (n + h / 60) % 6
         return v - v * s * Math.max(0, Math.min(k, 4 - k, 1))
     }
-    return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
+    return hex([f(5), f(3), f(1)])
 }
 
-function hexToHsv(hex) {
-    const n = parseInt(hex.slice(1), 16)
-    const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255
-    const max = Math.max(r, g, b), d = max - Math.min(r, g, b)
-    let h = 0
-    if (d) {
-        h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
-    }
-    return { hue: Math.round((h * 60 + 360) % 360), sat: Math.round(max ? d / max * 100 : 0) }
-}
-
-// White light: amber at 0, near-white in the middle, pale blue at 100 (as in
-// the widget's SceneInfo.qml).
+// White light: amber at 0, near-white in the middle, pale blue at 100.
 function whiteColour(temperature) {
     const t = clamp(temperature, 0, 100) / 100
-    let r, g, b
     if (t < 0.5) {
         const k = t / 0.5
-        ;[r, g, b] = [1, 0.71 + 0.25 * k, 0.36 + 0.52 * k]
-    } else {
-        const k = (t - 0.5) / 0.5
-        ;[r, g, b] = [1 - 0.19 * k, 0.96 - 0.07 * k, 0.88 + 0.12 * k]
+        return hex([1, 0.71 + 0.25 * k, 0.36 + 0.52 * k])
     }
-    return '#' + [r, g, b].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
-}
-
-function luminance(hex) {
-    const n = parseInt(hex.slice(1), 16)
-    return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255
+    const k = (t - 0.5) / 0.5
+    return hex([1 - 0.19 * k, 0.96 - 0.07 * k, 0.88 + 0.12 * k])
 }
 
 const HUES = [[15, 'red'], [45, 'orange'], [70, 'yellow'], [165, 'green'], [200, 'cyan'],
     [256, 'blue'], [295, 'purple'], [345, 'pink'], [361, 'red']]
 
-function hueName(hue, sat) {
-    const key = HUES.find(([limit]) => hue % 360 < limit)[1]
-    const name = S.names[key]
-    return sat < 35 ? fmt(S.pale, name) : name
-}
-
-function toneOf(temp) {
-    return temp < 34 ? 'warm' : temp > 66 ? 'cool' : 'neutral'
-}
-
+const hueName = hue => S.names[HUES.find(([limit]) => hue % 360 < limit)[1]]
+const toneOf = temp => (temp < 34 ? 'warm' : temp > 66 ? 'cool' : 'neutral')
 const near = (a, b, d = 2) => Math.abs(a - b) <= d
 const hueNear = (a, b, d = 2) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b)) <= d
 
@@ -208,12 +159,6 @@ function sceneColour(scene) {
         return hsvToHex(scene.hue % 360, scene.saturation / 100, 0.45 + 0.55 * scene.brightness / 100)
     }
     return whiteColour(scene.temperature)
-}
-
-// "Warm, 45%" or "Blue, 18%": short enough for half a phone's width.
-function describe(mode, { bright, temp, hue, sat }) {
-    const what = mode === 'colour' ? hueName(hue, sat) : S[toneOf(temp)]
-    return `${what}, ${pct(bright)}`
 }
 
 // -- talking to the computer -------------------------------------------------
@@ -286,17 +231,20 @@ async function pump() {
     const [kind, cmd] = queue.entries().next().value
     queue.delete(kind)
     inFlight = true
+    app.toggleAttribute('data-busy', true)
     let state = null
     try {
         state = await api(cmd.path, cmd.body)
     } catch (err) {
         inFlight = false
+        app.toggleAttribute('data-busy', false)
         queue.clear() // don't replay old commands once the computer is back
         lastSent = null
         fail(err)
         return
     }
     inFlight = false
+    app.toggleAttribute('data-busy', queue.size > 0)
     receive(state, state.latest !== false && queue.size === 0)
     if (queue.size) {
         pump()
@@ -439,10 +387,6 @@ function setConn(conn, detail = '') {
     ui.detail = detail
 }
 
-function lampColour() {
-    return ui.mode === 'colour' ? hsvToHex(ui.shown.hue, ui.shown.sat / 100, 1) : whiteColour(ui.shown.temp)
-}
-
 // Text with `code` spans, built without innerHTML.
 function setRich(el, text) {
     el.replaceChildren(...text.split('`').map((part, i) => {
@@ -455,63 +399,64 @@ function setRich(el, text) {
     }))
 }
 
+// Line icons for the message, in the spirit of Breeze's.
+const ICONS = {
+    disconnected: 'M17 31l-4 4a5.7 5.7 0 0 1-8-8l4-4M31 17l4-4a5.7 5.7 0 0 0-8-8l-4 4M19 29l-3 3M29 19l3-3M8 8l32 32',
+    key: 'M20 28a8 8 0 1 1 5.7-2.3L40 40M33 33l3-3M37 37l3-3',
+    setup: 'M24 6v6M24 36v6M6 24h6M36 24h6M11.3 11.3l4.2 4.2M32.5 32.5l4.2 4.2M11.3 36.7l4.2-4.2M32.5 15.5l4.2-4.2M24 30a6 6 0 1 0 0-12 6 6 0 0 0 0 12z',
+}
+
 const NOTICES = {
-    pc: ['pcTitle', 'pcText', true],
-    bulb: ['bulbTitle', 'bulbText', true],
-    unpaired: ['unpairedTitle', 'unpairedText', false],
-    badkey: ['badKeyTitle', 'badKeyText', false],
-    setup: ['setupTitle', 'setupText', true],
-    refused: ['refusedTitle', null, false],
-    error: ['errorTitle', null, true],
+    loading: [null, 'connecting', null, false],
+    pc: ['disconnected', 'pcTitle', 'pcText', true],
+    bulb: ['disconnected', 'bulbTitle', 'bulbText', true],
+    unpaired: ['key', 'unpairedTitle', 'unpairedText', false],
+    badkey: ['key', 'badKeyTitle', 'badKeyText', false],
+    setup: ['setup', 'setupTitle', 'setupText', true],
+    refused: ['key', 'refusedTitle', null, false],
+    error: ['disconnected', 'errorTitle', null, true],
 }
 
 function render() {
-    const colour = lampColour()
     const usable = ui.conn === 'ok'
     app.dataset.conn = ui.conn
     app.dataset.power = ui.on ? 'on' : 'off'
     app.dataset.mode = ui.mode
-    app.style.setProperty('--lamp', colour)
-    app.style.setProperty('--glow', ui.on ? (0.2 + 0.55 * ui.shown.bright / 100).toFixed(2) : '0')
-    app.style.setProperty('--grip', luminance(colour) > 0.55 ? 'rgba(27, 29, 42, 0.32)' : 'rgba(255, 255, 255, 0.7)')
 
-    // Header
+    // Heading
     if (ui.light && ui.light.name) {
         $('name').textContent = ui.light.name
     }
-    $('via').hidden = ui.transport !== 'cloud' || ui.conn !== 'ok'
+    $('via').hidden = ui.transport !== 'cloud' || !usable
+    const power = $('power')
+    power.disabled = !usable
+    power.setAttribute('aria-checked', String(ui.on))
 
-    // Lamp, or a message in its place
+    // A message in place of the controls
     const notice = NOTICES[ui.conn]
     $('notice').hidden = !notice
-    $('lamp').hidden = Boolean(notice)
     if (notice) {
-        const [title, text, retry] = notice
-        $('notice-title').textContent = S[title]
-        setRich($('notice-text'), text ? S[text] : '')
-        $('notice-detail').textContent = text ? ui.detail : ''
-        if (!text) {
-            $('notice-text').textContent = ui.detail
+        const [icon, title, text, retry] = notice
+        const svg = $('notice-icon')
+        svg.hidden = !icon
+        if (icon) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+            path.setAttribute('d', ICONS[icon])
+            svg.replaceChildren(path)
         }
+        $('notice-title').textContent = S[title]
+        setRich($('notice-text'), text ? S[text] : ui.detail)
+        $('notice-detail').textContent = text ? ui.detail : ''
         $('retry').hidden = !retry
     }
-    const lamp = $('lamp')
-    lamp.disabled = !usable
-    lamp.setAttribute('aria-checked', String(ui.on))
-    if (ui.conn === 'loading') {
-        $('lamp-title').textContent = S.connecting
-        $('lamp-detail').textContent = ''
-    } else if (!ui.on) {
-        $('lamp-title').textContent = S.off
-        $('lamp-detail').textContent = S.tapToTurnOn
-    } else if (ui.mode === 'scene') {
-        $('lamp-title').textContent = S.effect
-        $('lamp-detail').textContent = S.effectDetail
-    } else {
-        $('lamp-title').textContent = ui.mode === 'colour'
-            ? hueName(ui.shown.hue, ui.shown.sat) : S[toneOf(ui.shown.temp) + 'White']
-        $('lamp-detail').textContent = fmt(S.brightnessIs, pct(ui.shown.bright))
-    }
+
+    // Colour wheel
+    const wheel = $('wheel')
+    wheel.style.setProperty('--hue', ui.shown.hue)
+    wheel.style.setProperty('--sat', ui.shown.sat)
+    wheel.style.setProperty('--knob', hsvToHex(ui.shown.hue, ui.shown.sat / 100, 1))
+    wheel.setAttribute('aria-valuenow', ui.shown.hue)
+    wheel.setAttribute('aria-valuetext', `${hueName(ui.shown.hue)}, ${pct(ui.shown.sat)}`)
 
     // Sliders
     const bright = $('bright')
@@ -526,20 +471,8 @@ function render() {
     temp.setAttribute('aria-valuenow', ui.shown.temp)
     temp.setAttribute('aria-valuetext', tone)
     $('temp-value').textContent = tone
-
-    for (const el of [bright, temp, $('more-colour')]) {
-        el.toggleAttribute('aria-disabled', !usable)
-    }
-
-    // Colours
-    for (const button of document.querySelectorAll('.swatch[data-hue]')) {
-        const on = ui.on && ui.mode === 'colour'
-            && hueNear(ui.shown.hue, Number(button.dataset.hue)) && near(ui.shown.sat, Number(button.dataset.sat))
-        button.setAttribute('aria-pressed', String(on))
-    }
-    const more = $('more-colour')
-    if (document.activeElement !== more) {
-        more.value = hsvToHex(ui.shown.hue, ui.shown.sat / 100, 1)
+    for (const el of [bright, temp]) {
+        el.toggleAttribute('aria-disabled', !ui.on)
     }
 
     // Scenes
@@ -582,12 +515,7 @@ function renderScenes() {
         const label = document.createElement('span')
         label.className = 'scene-label'
         label.textContent = sceneLabel(scene)
-        const desc = document.createElement('span')
-        desc.className = 'scene-desc'
-        desc.textContent = describe(scene.mode, {
-            bright: scene.brightness, temp: scene.temperature, hue: scene.hue, sat: scene.saturation,
-        })
-        button.append(dot, label, desc)
+        button.append(dot, label)
         button.addEventListener('click', () => applyScene(scene))
         return button
     }))
@@ -596,9 +524,12 @@ function renderScenes() {
 
 // -- actions ---------------------------------------------------------------
 
-function usable() {
-    return ui.conn === 'ok'
-}
+const usable = () => ui.conn === 'ok'
+
+// `final` is false while a finger is still moving. Local lights get every
+// step (the queue keeps it to the first and the last); cloud lights only the
+// value where the movement ended.
+const wants = final => final || ui.transport !== 'cloud'
 
 function togglePower() {
     if (!usable()) {
@@ -609,14 +540,8 @@ function togglePower() {
     send('power', '/api/power', { on: ui.on })
 }
 
-// `final` is false while a finger is still moving. Local lights get every
-// step (the queue keeps it to the first and the last); cloud lights only the
-// value where the movement ended.
-const wants = final => final || ui.transport !== 'cloud'
-
 function setBrightness(value, final = true) {
     ui.shown.bright = value
-    ui.on = true // the core switches the light on for any change
     render()
     if (wants(final)) {
         send('brightness', '/api/brightness', { value })
@@ -626,24 +551,22 @@ function setBrightness(value, final = true) {
 function setTemperature(value, final = true) {
     ui.shown.temp = value
     ui.mode = 'white'
-    ui.on = true
     render()
     if (wants(final)) {
         send('temperature', '/api/temperature', { value })
     }
 }
 
+// As in the widget: picking on the wheel turns the light on, in colour,
+// keeping its brightness (at least 5 %).
 function setColour(hue, sat, final = true) {
     ui.shown.hue = hue
     ui.shown.sat = sat
-    if (ui.mode !== 'colour') {
-        ui.shown.bright = Math.max(ui.shown.bright, 5)
-    }
     ui.mode = 'colour'
     ui.on = true
     render()
     if (wants(final)) {
-        send('colour', '/api/colour', { hue, saturation: sat, value: Math.max(5, ui.shown.bright) })
+        send('colour', '/api/colour', { hue, saturation: sat, value: Math.max(5, Math.round(ui.shown.bright)) })
     }
 }
 
@@ -660,68 +583,81 @@ function applyScene(scene) {
     send('scene', '/api/scene', { name: scene.name })
 }
 
-// A slider: drag sideways or tap anywhere on it. A vertical swipe that starts
-// on it scrolls the page instead (touch-action: pan-y), and changes nothing.
-function bindBar(el, min, apply) {
-    let start = null
-    const valueAt = x => {
-        const box = el.getBoundingClientRect()
-        return Math.round(clamp(min + (x - box.left) / box.width * (100 - min), min, 100))
-    }
+// One finger on a control: follow it until it lifts. `read(e)` turns the
+// pointer into a value; `apply(value, final)` shows and sends it.
+function track(el, read, apply, allowed) {
+    let id = null
+    let last = null
     el.addEventListener('pointerdown', e => {
-        if (!usable() || e.button > 0) {
+        if (!allowed() || e.button > 0) {
             return
         }
-        start = { id: e.pointerId, x: e.clientX, moved: false }
+        id = e.pointerId
+        el.setPointerCapture(id)
+        ui.dragging = true
+        last = read(e)
+        apply(last, false)
     })
     el.addEventListener('pointermove', e => {
-        if (!start || e.pointerId !== start.id) {
+        if (e.pointerId === id) {
+            last = read(e)
+            apply(last, false)
+        }
+    })
+    const finish = e => {
+        if (e.pointerId !== id) {
             return
         }
-        if (!start.moved) {
-            if (Math.abs(e.clientX - start.x) < 6) {
-                return
-            }
-            start.moved = true
-            ui.dragging = true
-            el.setPointerCapture(e.pointerId)
-        }
-        start.last = valueAt(e.clientX)
-        apply(start.last, false)
-    })
-    el.addEventListener('pointerup', e => {
-        if (!start || e.pointerId !== start.id) {
-            return
-        }
-        start = null
+        id = null
         ui.dragging = false
-        apply(valueAt(e.clientX))
-    })
-    el.addEventListener('pointercancel', () => {
-        const last = start && start.moved ? start.last : null
-        start = null
-        ui.dragging = false
-        if (last !== null && last !== undefined) {
-            apply(last, true) // the browser took the gesture over mid-drag
-        }
-    })
+        apply(last, true)
+    }
+    el.addEventListener('pointerup', finish)
+    el.addEventListener('pointercancel', finish)
+}
+
+function bindSlider(el, min, apply) {
+    // The handle's centre runs from 13 px in from each end, as the CSS draws it.
+    const read = e => {
+        const box = el.getBoundingClientRect()
+        return Math.round(clamp(min + (e.clientX - box.left - 13) / (box.width - 26) * (100 - min), min, 100))
+    }
+    track(el, read, apply, () => usable() && ui.on)
     el.addEventListener('keydown', e => {
-        if (!usable()) {
+        if (!usable() || !ui.on) {
             return
         }
         const now = Number(el.getAttribute('aria-valuenow'))
         const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 10, PageDown: -10 }[e.key]
-        let next = null
-        if (step !== undefined) {
-            next = now + step * (e.shiftKey ? 10 : 1)
-        } else if (e.key === 'Home') {
-            next = min
-        } else if (e.key === 'End') {
-            next = 100
-        }
+        const next = step !== undefined ? now + step * (e.shiftKey ? 10 : 1)
+            : e.key === 'Home' ? min : e.key === 'End' ? 100 : null
         if (next !== null) {
             e.preventDefault()
-            apply(clamp(next, min, 100))
+            apply(clamp(next, min, 100), true)
+        }
+    })
+}
+
+// Hue around the circle (red at three o'clock, clockwise), saturation from the
+// centre out: the same geometry as the widget's ColorWheel.qml.
+function bindWheel(el) {
+    const read = e => {
+        const box = el.getBoundingClientRect()
+        const dx = e.clientX - (box.left + box.width / 2)
+        const dy = e.clientY - (box.top + box.height / 2)
+        const hue = (Math.round(Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360
+        return { hue, sat: Math.round(Math.min(100, Math.hypot(dx, dy) / (box.width / 2) * 100)) }
+    }
+    track(el, read, (v, final) => setColour(v.hue, v.sat, final), usable)
+    el.addEventListener('keydown', e => {
+        if (!usable()) {
+            return
+        }
+        const turn = { ArrowRight: 5, ArrowLeft: -5 }[e.key]
+        const reach = { ArrowUp: 5, ArrowDown: -5 }[e.key]
+        if (turn !== undefined || reach !== undefined) {
+            e.preventDefault()
+            setColour((ui.shown.hue + (turn || 0) + 360) % 360, clamp(ui.shown.sat + (reach || 0), 0, 100))
         }
     })
 }
@@ -746,38 +682,10 @@ function start() {
         el.setAttribute('aria-label', S[el.dataset.tLabel])
     }
 
-    const more = document.querySelector('.swatch-more')
-    for (const [name, hex] of SWATCHES) {
-        const { hue, sat } = hexToHsv(hex)
-        const button = document.createElement('button')
-        button.type = 'button'
-        button.className = 'swatch'
-        button.dataset.hue = hue
-        button.dataset.sat = sat
-        button.style.setProperty('--c', hex)
-        button.setAttribute('aria-label', S.names[name])
-        button.addEventListener('click', () => usable() && setColour(hue, sat))
-        more.before(button)
-    }
-    // The system colour picker reports while you choose and once at the end.
-    let pickTimer = 0
-    const pick = final => e => {
-        if (!usable()) {
-            return
-        }
-        const { hue, sat } = hexToHsv(e.target.value)
-        clearTimeout(pickTimer)
-        setColour(hue, sat, final)
-        if (!final && !wants(false)) { // cloud: send once the choice rests
-            pickTimer = setTimeout(() => setColour(hue, sat, true), 700)
-        }
-    }
-    $('more-colour').addEventListener('input', pick(false))
-    $('more-colour').addEventListener('change', pick(true))
-
-    $('lamp').addEventListener('click', togglePower)
-    bindBar($('bright'), 1, setBrightness)
-    bindBar($('temp'), 0, setTemperature)
+    $('power').addEventListener('click', togglePower)
+    bindWheel($('wheel'))
+    bindSlider($('bright'), 1, setBrightness)
+    bindSlider($('temp'), 0, setTemperature)
     $('device').addEventListener('change', e => selectDevice(e.target.value))
     $('retry').addEventListener('click', () => {
         failures = 0

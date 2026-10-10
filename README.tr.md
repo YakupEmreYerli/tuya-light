@@ -17,7 +17,7 @@ Telefon uygulaması her dokunuşta Tuya'nın bulutuna gider. Tuya Light ise ampu
 - **İstediğiniz gibi.** Pencerede hangi bölümlerin hangi sırayla görüneceği, teker boyutu, sahne sütunları ve favori renkler; sol tık, orta tık ve fare tekerleğinin ne yapacağı (aç, aç/kapat, bir sahne; parlaklık, sıcaklık ya da renk); panel simgesi (dört şekil, renkli ya da değil, kapalıyken soluk, yanında parlaklık).
 - **Komut satırı.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Ampule dokunan her komut ampulün son durumunu yazar, `--json` ile makinenin okuyacağı biçimde.
 - **MCP sunucusu.** `tuya-light mcp` aynı kontrolleri araç olarak sunar; Claude gibi bir asistana "ışığı biraz ısıt" ya da "film modu" demek yeter.
-- **Telefon sayfası.** `tuya-light serve` aynı kontrolleri tek elle tutulan bir telefon için tek ekrana koyar: büyük bir aç/kapat düğmesi, parlaklık, sıcaktan soğuğa beyaz ışık, renkler ve sahneleriniz. iPhone'da Ana Ekran'a eklenince uygulama gibi açılır. İsteğe bağlı.
+- **Telefon sayfası.** `tuya-light serve` bileşenin penceresini telefon ekranına taşır: aç/kapat anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı, sahneleriniz; hepsi başparmakla kullanılacak boyutta. iPhone'da Ana Ekran'a eklenince uygulama gibi açılır. İsteğe bağlı.
 - **İstediğiniz yerde çalışır.** Bilgisayarınızda, evde sürekli açık duran bir cihazda (systemd ya da Docker) ya da Tuya'nın bulut API'si üzerinden kiralık bir sunucuda. Bkz. [Nerede çalışır](#nerede-çalışır).
 - **İki ampul nesli.** Eski (veri noktaları 1-5) ve yeni (20-24) ampuller; 3.1'den 3.5'e protokol sürümleri, [tinytuya](https://github.com/jasonacox/tinytuya) üzerinden.
 - **Hazır sahneler:** Rahat, Okuma, Odak, Film, Gece, Parti.
@@ -60,9 +60,9 @@ Her cihaz için güçlüden zayıfa: `tuya-light --transport local|cloud`, `devi
 
 ## Telefonda
 
-`tuya-light serve` telefon için tek ekranlık bir sayfa sunar: büyük bir aç/kapat, parlaklık, sıcaktan soğuğa beyaz ışık, birkaç renk ve tam renk seçici, büyük düğmeler hâlinde sahneleriniz. Telefonun açık ya da koyu temasına uyar, ışığın durumunu değiştikçe gösterir.
+`tuya-light serve` bileşenin penceresini telefon için tek ekranlık bir sayfa olarak sunar: ışığın adı ve anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları, sahneleriniz. Telefonun açık ya da koyu temasına uyar, ışığın durumunu değiştikçe gösterir.
 
-![Telefon sayfası açık ve koyu temada: üstte ışığın durumu ve aç/kapat anahtarı, parlaklık ve beyaz ışık çubukları, renkler ve altı sahne](docs/screenshots/phone.png)
+![Telefon sayfası açık ve koyu temada: üstte ışığın adı ve anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları, üç sütunda altı sahne](docs/screenshots/phone.png)
 
 1. Bilgisayarda: `./install.sh --web`. `tuya-light[web]`'i ve `tuya-light-serve` adlı bir systemd kullanıcı servisini kurar; servis oturum açılınca başlar, çökerse yeniden başlar (8892 portu, bütün ağ arayüzleri).
 2. `tuya-light serve --pair` bilgisayarın her adresi için, yani ev ağı ve kullanıyorsanız Tailscale (100.x) için, birer bağlantı ve QR kodu yazar.

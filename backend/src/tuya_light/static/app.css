@@ -2,51 +2,67 @@
     SPDX-FileCopyrightText: 2026 Yakup Emre Yerli
     SPDX-License-Identifier: GPL-2.0-or-later
 
-    The light is the only colour on this page: everything else is the
-    project's navy and greys, and every coloured pixel stands for the bulb.
+    The panel widget's popup, made for a phone: its heading band and switch,
+    its colour wheel, thin sliders with small leading icons, and compact scene
+    tiles. Colours are the ones the widget renders with on Plasma's navy
+    dialog; the light variant is derived from the same steel blue.
 */
 
 :root {
     color-scheme: light dark;
-    --bg: #eef0f6;
-    --panel: #ffffff;
-    --press: #e4e7f0;
-    --track: #e1e4ee;
-    --edge: rgba(27, 29, 42, 0.1);
-    --ink: #1b1d2a;
-    --ink-2: #4f5470;
-    --ink-3: #6b6f87;
-    --off: #c3c6d4;
-    --knob: #ffffff;
-    --focus: #8a6bff;
-    --lamp: #fff5e0;       /* the bulb's colour, set by app.js */
-    --glow: 0;             /* 0..1, follows brightness */
-    --grip: rgba(27, 29, 42, 0.32);
-    --gutter: 20px;
-    font: 17px/1.35 system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+
+    /* light: the same parts on a pale steel-blue dialog */
+    --head: #dbe5f2;
+    --body: #edf2f9;
+    --divider: #c3d1e4;
+    --title: #3d5878;      /* heading, values, icons */
+    --ink: #10233b;        /* scene names, messages */
+    --ink-soft: #5d7493;
+    --tile: #ffffff;
+    --tile-border: #b5c6db;
+    --tile-press: #e3ebf6;
+    --track: #cfdae8;
+    --track-border: #b9c8db;
+    --fill: #5a799c;
+    --fill-border: #4a6788;
+    --handle: #ffffff;
+    --handle-border: #8ba2bf;
+    --focus: #3d7ac7;
+
+    --gutter: 16px;
+    font: 16px/1.3 system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #10111a;
-        --panel: #1b1d2a;
-        --press: #24273a;
-        --track: #252839;
-        --edge: rgba(232, 233, 243, 0.08);
-        --ink: #e8e9f3;
-        --ink-2: #a9adc4;
-        --ink-3: #8a8ea6;
-        --off: #3a3d52;
-        --knob: #e8e9f3;
+        /* dark: sampled from the widget on Plasma's navy dialog, whose
+           translucent body reads as slate */
+        --head: #0f2137;
+        --body: #2b3b4f;
+        --divider: #223650;
+        --title: #95acd2;
+        --ink: #d8e6ff;
+        --ink-soft: #7d93b5;
+        --tile: #071e39;
+        --tile-border: #314661;
+        --tile-press: #0c2a4c;
+        --track: #1d3149;
+        --track-border: #314661;
+        --fill: #5a799c;
+        --fill-border: #8ea8c9;
+        --handle: #071e39;
+        --handle-border: #3d5677;
+        --focus: #6c9be0;
     }
 }
 
 html,
 body {
     margin: 0;
-    background: var(--bg);
+    height: 100%;
+    background: var(--body);
     color: var(--ink);
 }
 
@@ -55,9 +71,7 @@ html {
 }
 
 body {
-    min-height: 100vh;
-    min-height: 100dvh;
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -65,15 +79,14 @@ body {
 }
 
 button,
-select,
-input {
+select {
     font: inherit;
     color: inherit;
 }
 
 :focus-visible {
     outline: 2px solid var(--focus);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 [hidden] {
@@ -89,295 +102,197 @@ input {
     white-space: nowrap;
 }
 
-/* -- frame ------------------------------------------------------------ */
+/* -- frame ---------------------------------------------------------------- */
 
 .app {
-    box-sizing: border-box;
-    max-width: 480px;
-    min-height: 100vh;
-    min-height: 100dvh;
-    margin: 0 auto;
-    padding:
-        calc(env(safe-area-inset-top) + 10px)
-        calc(env(safe-area-inset-right) + var(--gutter))
-        calc(env(safe-area-inset-bottom) + 16px)
-        calc(env(safe-area-inset-left) + var(--gutter));
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
 }
 
-.top {
+.head {
     display: flex;
     align-items: center;
-    min-height: 44px;
+    gap: 8px;
+    min-height: 52px;
+    padding:
+        env(safe-area-inset-top)
+        calc(env(safe-area-inset-right) + var(--gutter) - 6px)
+        0
+        calc(env(safe-area-inset-left) + var(--gutter));
+    background: var(--head);
+    border-bottom: 1px solid var(--divider);
 }
 
 .name {
+    flex: 0 1 auto;
+    min-width: 0;
     margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--title);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.via {
-    margin-left: auto;
-    padding-left: 12px;
-    font-size: 13px;
-    color: var(--ink-3);
-    white-space: nowrap;
-}
-
-.picker-device {
+.picker {
     position: relative;
-    display: inline-flex;
-    max-width: 100%;
+    flex: 0 1 auto;
+    min-width: 0;
+    display: flex;
 }
 
-.picker-device select {
+.picker select {
     appearance: none;
     -webkit-appearance: none;
     max-width: 100%;
     min-height: 44px;
     margin: 0;
-    padding: 0 28px 0 0;
+    padding: 0 22px 0 0;
     border: 0;
     background: transparent;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 19px;
+    color: var(--title);
     text-overflow: ellipsis;
-    field-sizing: content; /* the chevron follows the name where supported */
+    field-sizing: content;
     cursor: pointer;
 }
 
-.picker-device::after { /* a chevron, drawn with two borders */
+.picker::after { /* chevron */
     content: "";
     position: absolute;
-    right: 6px;
     top: 50%;
-    width: 8px;
-    height: 8px;
-    margin-top: -7px;
-    border-right: 2px solid var(--ink-2);
-    border-bottom: 2px solid var(--ink-2);
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    margin-top: -6px;
+    border-right: 1.5px solid var(--title);
+    border-bottom: 1.5px solid var(--title);
     transform: rotate(45deg);
     pointer-events: none;
 }
 
-/* -- the lamp: state and the big on/off ----------------------------------- */
-
-.lamp,
-.notice {
-    box-sizing: border-box;
-    min-height: 136px;
-    border-radius: 28px;
-    background: var(--panel);
-}
-
-.lamp {
-    display: grid;
-    grid-template-columns: 68px 1fr auto;
+.via {
+    display: inline-flex;
     align-items: center;
-    gap: 14px;
-    width: 100%;
-    margin: 0;
-    padding: 16px 18px 16px 16px;
-    border: 0;
-    text-align: left;
-    cursor: pointer;
-    transition: transform 0.12s ease-out, background-color 0.12s;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
 }
 
-.lamp:active:not(:disabled) {
-    transform: scale(0.985);
-    background: var(--press);
+.via svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
 }
 
-.lamp:disabled {
-    cursor: default;
-}
-
-.bulb {
-    width: 68px;
-    height: 86px;
-    overflow: visible;
-}
-
-.halo-in {
-    stop-color: var(--lamp);
-    stop-opacity: var(--glow);
-}
-
-.halo-out {
-    stop-color: var(--lamp);
-    stop-opacity: 0;
-}
-
-.glass {
-    fill: var(--lamp);
-    transition: fill 0.25s;
-}
-
-.shell {
-    fill: var(--ink);
-}
-
-.base-2 {
-    opacity: 0.7;
-}
-
-.app[data-power="off"] .glass,
-.app[data-conn="loading"] .glass {
-    fill: transparent;
-}
-
-.app[data-power="off"] .halo,
-.app[data-conn="loading"] .halo {
+.busy {
+    flex: none;
+    margin-left: auto;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--track);
+    border-top-color: var(--fill);
+    border-radius: 50%;
     visibility: hidden;
 }
 
-.app[data-power="off"] .shell,
-.app[data-conn="loading"] .shell {
-    fill: var(--ink-3);
+.app[data-busy] .busy {
+    visibility: visible;
+    animation: spin 0.8s linear infinite;
 }
 
-.lamp-text {
-    min-width: 0;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-.lamp-title {
-    display: block;
-    font-size: 26px;
-    font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    text-wrap: balance;
-}
-
-.lamp-title::first-letter {
-    text-transform: uppercase;
-}
-
-.lamp-detail {
-    display: block;
-    margin-top: 5px;
-    font-size: 15px;
-    color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
-}
-
+/* Plasma's switch: a short pill with a larger round knob that overhangs it. */
 .switch {
     position: relative;
-    width: 60px;
-    height: 36px;
-    border-radius: 18px;
+    flex: none;
+    width: 58px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.switch::before { /* track */
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 14px;
+    width: 38px;
+    height: 16px;
+    box-sizing: border-box;
+    border-radius: 8px;
     background: var(--track);
-    box-shadow: inset 0 0 0 1px var(--edge);
-    transition: background-color 0.2s;
+    border: 1px solid var(--track-border);
+    transition: background-color 0.15s, border-color 0.15s;
 }
 
 .switch-knob {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 30px;
-    height: 30px;
+    left: 6px;
+    top: 9px;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
     border-radius: 50%;
-    background: var(--knob);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+    background: var(--handle);
+    border: 1px solid var(--handle-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s;
 }
 
-.app[data-power="on"] .switch {
-    background: var(--lamp);
+.app[data-power="on"] .switch::before {
+    background: var(--fill);
+    border-color: var(--fill-border);
 }
 
 .app[data-power="on"] .switch-knob {
-    transform: translateX(24px);
-    background: #ffffff;
+    transform: translateX(20px);
 }
 
-.app[data-conn="loading"] .switch {
-    visibility: hidden;
+.switch:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
-/* -- when something is wrong: one message in the lamp's place ------------- */
+/* -- body ------------------------------------------------------------------- */
 
-.notice {
-    padding: 20px 22px 22px;
-}
-
-.notice-title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-.notice-text {
-    margin: 8px 0 0;
-    font-size: 15px;
-    line-height: 1.45;
-    color: var(--ink-2);
-    -webkit-user-select: text;
-    user-select: text;
-}
-
-.notice-text code {
-    font: 600 14px/1.4 ui-monospace, "SF Mono", "Noto Sans Mono", monospace;
-    color: var(--ink);
-    white-space: nowrap;
-}
-
-.notice-detail {
-    margin: 8px 0 0;
-    font-size: 13px;
-    color: var(--ink-3);
-    overflow-wrap: anywhere;
-}
-
-.notice-detail:empty {
-    display: none;
-}
-
-.notice-action {
-    min-height: 44px;
-    margin-top: 16px;
-    padding: 0 20px;
-    border: 0;
-    border-radius: 22px;
-    background: var(--ink);
-    color: var(--bg);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.notice-action:active {
-    opacity: 0.8;
-}
-
-/* -- controls ------------------------------------------------------------- */
-
-.controls {
+.body {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    transition: opacity 0.2s;
+    padding:
+        14px
+        calc(env(safe-area-inset-right) + var(--gutter))
+        calc(env(safe-area-inset-bottom) + 14px)
+        calc(env(safe-area-inset-left) + var(--gutter));
 }
 
+.controls {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.app[data-conn="loading"] .controls,
 .app[data-conn="pc"] .controls,
 .app[data-conn="bulb"] .controls,
 .app[data-conn="error"] .controls,
-.app[data-conn="loading"] .controls {
-    opacity: 0.38;
-    pointer-events: none;
-}
-
 .app[data-conn="unpaired"] .controls,
 .app[data-conn="badkey"] .controls,
 .app[data-conn="setup"] .controls,
@@ -385,234 +300,323 @@ input {
     display: none;
 }
 
-.field-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin: 0 2px 8px;
-    font-size: 15px;
-    color: var(--ink-2);
-}
+/* the colour wheel: hue around, saturation outwards, red at three o'clock */
 
-.field-value {
-    color: var(--ink);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-}
-
-.bar {
-    --v: 50;
-    position: relative;
-    height: 52px;
-    border-radius: 16px;
-    background: var(--track);
-    box-shadow: inset 0 0 0 1px var(--edge);
-    overflow: hidden;
-    touch-action: pan-y; /* sideways drags are ours, vertical ones scroll */
-    cursor: pointer;
-}
-
-.bar-fill {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: max(32px, calc(var(--v) * 1%));
-    border-radius: 16px;
-    background: var(--lamp);
-}
-
-.app[data-power="off"] .bar-fill {
-    background: var(--off);
-}
-
-.bar-grip {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    width: 4px;
-    height: 20px;
-    margin-top: -10px;
-    border-radius: 2px;
-    background: var(--grip);
-}
-
-.bar-temp {
-    /* amber, near-white, pale blue: the same scale as the widget's slider */
-    background: linear-gradient(90deg, #ffb55c, #fff5e0 50%, #cfe3ff);
-}
-
-.bar-thumb {
-    position: absolute;
-    top: 6px;
-    bottom: 6px;
-    left: clamp(12px, calc(var(--v) * 1%), calc(100% - 12px));
-    width: 8px;
-    margin-left: -4px;
-    border-radius: 4px;
-    background: #ffffff;
-    box-shadow: 0 0 0 1.5px rgba(27, 29, 42, 0.6), 0 1px 4px rgba(0, 0, 0, 0.25);
-}
-
-/* In colour mode the white scale has no current value; touching it goes white. */
-.app[data-mode="colour"] .bar-thumb,
-.app[data-mode="scene"] .bar-thumb {
-    visibility: hidden;
-}
-
-/* -- colours -------------------------------------------------------------- */
-
-.swatches {
+.wheel-area {
+    flex: 1;
+    min-height: 0;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    justify-items: center;
-    gap: 4px;
-    padding: 2px 0;
+    place-items: center;
+    padding-bottom: 12px;
 }
 
-.swatch {
+.wheel {
+    --hue: 0;
+    --sat: 0;
+    --knob: #ffffff;
     position: relative;
-    box-sizing: border-box;
-    width: 44px;
-    height: 44px;
-    margin: 0;
-    padding: 0;
-    border: 0;
+    width: min(100%, 360px);
+    max-height: 100%;
+    aspect-ratio: 1;
     border-radius: 50%;
-    background: var(--c, #888);
-    box-shadow: inset 0 0 0 1px var(--edge);
-    cursor: pointer;
-    transition: transform 0.12s ease-out;
-}
-
-.swatch:active {
-    transform: scale(0.92);
-}
-
-.swatch[aria-pressed="true"] {
-    box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink);
-}
-
-.swatch-more {
-    /* a small version of the widget's colour wheel */
     background:
         radial-gradient(circle closest-side, #ffffff, rgba(255, 255, 255, 0)),
         conic-gradient(from 90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+    touch-action: none;
+    cursor: crosshair;
+    transition: opacity 0.15s;
 }
 
-.swatch-more input {
+.app[data-power="off"] .wheel,
+.app[data-mode="white"] .wheel,
+.app[data-mode="scene"] .wheel {
+    opacity: 0.45;
+}
+
+.wheel-knob {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
+    left: calc(50% + cos(var(--hue) * 1deg) * var(--sat) * 0.5%);
+    top: calc(50% + sin(var(--hue) * 1deg) * var(--sat) * 0.5%);
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box;
+    margin: -17px 0 0 -17px;
     border-radius: 50%;
-    opacity: 0;
+    border: 4px solid #ffffff;
+    background: var(--knob);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.app[data-power="off"] .wheel-knob,
+.app[data-mode="white"] .wheel-knob,
+.app[data-mode="scene"] .wheel-knob {
+    visibility: hidden;
+}
+
+/* sliders */
+
+.bottom {
+    flex: none;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 18px 1fr 56px;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    padding-left: 2px;
+}
+
+.row-icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--title);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+}
+
+.row-icon .drop {
+    fill: var(--title);
+    fill-opacity: 0.35;
+}
+
+.row-value {
+    font-size: 17px;
+    color: var(--title);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.slider {
+    --v: 50;
+    position: relative;
+    height: 44px;
+    touch-action: none;
     cursor: pointer;
 }
 
-/* -- scenes --------------------------------------------------------------- */
+.slider-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 7px;
+    margin-top: -3.5px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background: var(--track);
+    border: 1px solid var(--track-border);
+    overflow: hidden;
+}
+
+.slider-fill {
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    bottom: -1px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background: var(--fill);
+    border: 1px solid var(--fill-border);
+    width: calc(13px + (100% - 26px) * var(--v) / 100 + 1px);
+}
+
+/* amber, near-white, pale blue: the same scale as the widget's */
+.slider-temp .slider-track {
+    background: linear-gradient(90deg, #ffb55c, #fff5e0 50%, #cfe3ff);
+    border-color: transparent;
+}
+
+.slider-handle {
+    position: absolute;
+    top: 50%;
+    left: calc(13px + (100% - 26px) * var(--v) / 100);
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    margin: -13px 0 0 -13px;
+    border-radius: 50%;
+    background: var(--handle);
+    border: 1px solid var(--handle-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+
+/* as in the widget: with the light off, the sliders rest */
+.app[data-power="off"] .row {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* scenes: the widget's compact buttons, three to a row */
 
 .scenes {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .scene {
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: 14px minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: 10px;
+    display: flex;
     align-items: center;
-    min-height: 68px;
+    gap: 8px;
+    min-width: 0;
+    height: 46px;
     margin: 0;
-    padding: 12px 12px 12px 14px;
-    border: 0;
-    border-radius: 18px;
-    background: var(--panel);
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--tile-border);
+    border-radius: 5px;
+    background: var(--tile);
+    color: var(--ink);
+    font-size: 16px;
     text-align: left;
     cursor: pointer;
-    transition: transform 0.12s ease-out, background-color 0.12s;
 }
 
 .scene:active {
-    transform: scale(0.97);
-    background: var(--press);
+    background: var(--tile-press);
 }
 
 .scene[aria-pressed="true"] {
-    box-shadow: inset 0 0 0 2px var(--ink);
+    border-color: var(--fill-border);
+    box-shadow: inset 0 0 0 1px var(--fill-border);
 }
 
 .scene-dot {
-    grid-row: 1 / span 2;
-    width: 14px;
-    height: 14px;
+    flex: none;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
-    background: var(--c, #888);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+    background: var(--c, #888888);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
 }
 
 .scene-label {
-    font-size: 17px;
-    font-weight: 600;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.scene-desc::first-letter {
-    text-transform: uppercase;
+/* -- one message in place of the controls, like the widget's placeholder --- */
+
+.placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px 10vh;
+    text-align: center;
 }
 
-.scene-desc {
+.placeholder-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 8px;
+    fill: none;
+    stroke: var(--title);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.8;
+}
+
+.placeholder-title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--ink);
+}
+
+.placeholder-text {
+    max-width: 30em;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--title);
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.placeholder-text code {
+    font: 14px ui-monospace, "SF Mono", "Noto Sans Mono", monospace;
+    white-space: nowrap;
+}
+
+.placeholder-detail {
+    margin: 0;
     font-size: 13px;
-    color: var(--ink-3);
-    font-variant-numeric: tabular-nums;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
 }
 
-/* -- Add to Home Screen hint (Safari tab only) ---------------------------- */
+.placeholder-detail:empty {
+    display: none;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 0 16px;
+    border: 1px solid var(--tile-border);
+    border-radius: 5px;
+    background: var(--tile);
+    color: var(--ink);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button:active {
+    background: var(--tile-press);
+}
+
+.button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* -- Add to Home Screen hint (Safari tab only) ------------------------------ */
 
 .hint {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin: auto 0 0;
-    padding: 4px 0 4px 2px;
+    margin: 10px 0 0;
     font-size: 13px;
-    line-height: 1.4;
-    color: var(--ink-3);
+    line-height: 1.35;
+    color: var(--ink-soft);
 }
 
 .hint-close {
     flex: none;
-    width: 44px;
-    height: 44px;
-    margin: -6px -10px -6px 0;
+    width: 40px;
+    height: 40px;
+    margin: -8px -10px -8px 0;
     border: 0;
     background: transparent;
-    font-size: 22px;
-    color: var(--ink-3);
+    font-size: 20px;
+    color: var(--ink-soft);
     cursor: pointer;
-}
-
-@media (max-height: 700px) {
-    .app { gap: 14px; }
-    .lamp, .notice { min-height: 112px; }
-    .lamp-title { font-size: 24px; }
-    .bar { height: 46px; }
-    .scene { min-height: 58px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         transition: none !important;
+        animation: none !important;
     }
 }
