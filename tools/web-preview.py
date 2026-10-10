@@ -3,6 +3,7 @@
 hardware and without touching your own configuration.
 
     .venv/bin/python tools/web-preview.py [--port 8893] [--lights 2] [--offline] [--cloud]
+                                          [--favourites]
 
 Prints a pairing link for this computer. The device list, scenes and key live
 in a temporary directory that is deleted on exit; no real bulb and no real
@@ -101,6 +102,7 @@ def main() -> int:
     p.add_argument("--lights", type=int, default=1, choices=(1, 2, 3))
     p.add_argument("--offline", action="store_true", help="the bulbs never answer")
     p.add_argument("--cloud", action="store_true", help="reach the bulbs through a pretend cloud")
+    p.add_argument("--favourites", action="store_true", help="start with favourite colours set")
     args = p.parse_args()
 
     with tempfile.TemporaryDirectory(prefix="tuya-light-preview-") as tmp:
@@ -116,6 +118,10 @@ def main() -> int:
         Path(tmp, "devices.json").chmod(0o600)
         os.environ["TUYA_LIGHT_CONFIG"] = str(Path(tmp, "devices.json"))
         os.environ["TUYA_LIGHT_SCENES"] = str(Path(tmp, "scenes.json"))
+        if args.favourites:
+            Path(tmp, "settings.json").write_text(json.dumps({"favourite_colours": [
+                "#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#00c7be", "#0a84ff", "#8e5cff",
+                "#ff2d92"]}))
         bulbs = {d["id"]: PretendBulb(args.offline) for d in devices}
         light_module.tinytuya.BulbDevice = lambda dev_id, *a, **kw: bulbs[dev_id]
 

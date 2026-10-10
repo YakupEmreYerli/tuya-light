@@ -28,10 +28,13 @@ const STRINGS = {
         white: 'White temperature',
         warm: 'Warm', neutral: 'Neutral', cool: 'Cool',
         scenes: 'Scenes',
+        favourites: 'Favourite colours',
         viaCloud: 'Tuya cloud',
         connecting: 'Connecting…',
         pcTitle: "Can't reach your computer",
         pcText: 'Is it switched on and awake? This phone has to be on your home Wi-Fi, or connected to Tailscale.',
+        serverTitle: "Can't reach the server",
+        serverText: 'Check that this phone is online and that tuya-light is running on the server.',
         bulbTitle: 'The light is not answering',
         bulbText: 'Is it switched on at the wall and on the same network?',
         unpairedTitle: 'This phone is not paired yet',
@@ -62,10 +65,13 @@ const STRINGS = {
         white: 'Beyaz ışık sıcaklığı',
         warm: 'Sıcak', neutral: 'Nötr', cool: 'Soğuk',
         scenes: 'Sahneler',
+        favourites: 'Favori renkler',
         viaCloud: 'Tuya bulutu',
         connecting: 'Bağlanıyor…',
         pcTitle: 'Bilgisayara ulaşılamıyor',
         pcText: 'Bilgisayar açık ve uyanık mı? Telefon evdeki Wi-Fi’a ya da Tailscale’e bağlı olmalı.',
+        serverTitle: 'Sunucuya ulaşılamıyor',
+        serverText: 'Telefonun internete bağlı olduğuna ve sunucuda tuya-light’ın çalıştığına bakın.',
         bulbTitle: 'Işık cevap vermiyor',
         bulbText: 'Anahtardan açık ve aynı ağda mı?',
         unpairedTitle: 'Bu telefon henüz eşleşmedi',
@@ -111,6 +117,7 @@ const ui = {
     devices: [],
     device: localStorage.getItem('device') || '',
     scenes: [],
+    favourites: [],       // shared favourite colours, as #rrggbb
     transport: 'local',
     pollMs: POLL_MS,
     lastActive: Date.now(),
@@ -147,6 +154,17 @@ const HUES = [[15, 'red'], [45, 'orange'], [70, 'yellow'], [165, 'green'], [200,
 const hueName = hue => S.names[HUES.find(([limit]) => hue % 360 < limit)[1]]
 const toneOf = temp => (temp < 34 ? 'warm' : temp > 66 ? 'cool' : 'neutral')
 const near = (a, b, d = 2) => Math.abs(a - b) <= d
+function hexToHsv(value) {
+    const n = parseInt(value.slice(1), 16)
+    const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255
+    const max = Math.max(r, g, b), d = max - Math.min(r, g, b)
+    let h = 0
+    if (d) {
+        h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+    }
+    return { hue: Math.round((h * 60 + 360) % 360), sat: Math.round(max ? d / max * 100 : 0) }
+}
+
 const hueNear = (a, b, d = 2) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b)) <= d
 
 function sceneLabel(scene) {
@@ -350,13 +368,17 @@ function fail(err) {
 
 async function refreshAll() {
     try {
-        const [devices, scenes] = await Promise.all([api('/api/devices'), api('/api/scenes')])
+        const [devices, scenes, favourites] = await Promise.all(
+            [api('/api/devices'), api('/api/scenes'),
+                api('/api/favourites').catch(() => ({ colours: [] }))])
         ui.devices = devices.devices || []
         if (ui.device && !ui.devices.some(d => d.id === ui.device)) {
             ui.device = ''
         }
         ui.scenes = Array.isArray(scenes) ? scenes : []
+        ui.favourites = Array.isArray(favourites.colours) ? favourites.colours : []
         renderDevices(devices.default)
+        renderFavourites()
         renderScenes()
     } catch (err) {
         fail(err)
@@ -406,9 +428,14 @@ const ICONS = {
     setup: 'M24 6v6M24 36v6M6 24h6M36 24h6M11.3 11.3l4.2 4.2M32.5 32.5l4.2 4.2M11.3 36.7l4.2-4.2M32.5 15.5l4.2-4.2M24 30a6 6 0 1 0 0-12 6 6 0 0 0 0 12z',
 }
 
+// Opened by a home address (LAN, Tailscale, .local) or by a public name?
+const atHome = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.|\[|[^.]+$|.*\.(local|lan|home|internal|ts\.net)$)/
+    .test(location.hostname)
+
 const NOTICES = {
     loading: [null, 'connecting', null, false],
-    pc: ['disconnected', 'pcTitle', 'pcText', true],
+    pc: atHome ? ['disconnected', 'pcTitle', 'pcText', true]
+        : ['disconnected', 'serverTitle', 'serverText', true],
     bulb: ['disconnected', 'bulbTitle', 'bulbText', true],
     unpaired: ['key', 'unpairedTitle', 'unpairedText', false],
     badkey: ['key', 'badKeyTitle', 'badKeyText', false],
@@ -475,6 +502,13 @@ function render() {
         el.toggleAttribute('aria-disabled', !ui.on)
     }
 
+    // Favourites
+    for (const button of $('favourites').children) {
+        const on = ui.on && ui.mode === 'colour' && hueNear(ui.shown.hue, button.hsv.hue)
+            && near(ui.shown.sat, button.hsv.sat)
+        button.setAttribute('aria-pressed', String(on))
+    }
+
     // Scenes
     for (const button of $('scenes').children) {
         const scene = button.scene
@@ -501,6 +535,22 @@ function renderDevices(defaultId) {
     }
     select.replaceChildren(...ui.devices.map(d => new Option(d.name, d.id)))
     select.value = ui.device || defaultId || ui.devices[0].id
+}
+
+// Only when there are any: the widget shows them only when chosen, too.
+function renderFavourites() {
+    const row = $('favourites')
+    row.hidden = ui.favourites.length === 0
+    row.replaceChildren(...ui.favourites.map(colour => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'swatch'
+        button.hsv = hexToHsv(colour)
+        button.style.setProperty('--c', colour)
+        button.setAttribute('aria-label', hueName(button.hsv.hue))
+        button.addEventListener('click', () => usable() && setColour(button.hsv.hue, button.hsv.sat))
+        return button
+    }))
 }
 
 function renderScenes() {
@@ -712,6 +762,10 @@ function start() {
         }
     })
     document.addEventListener('pointerdown', wake, { capture: true, passive: true })
+    // iOS pinch gestures: the page stays at its size.
+    for (const name of ['gesturestart', 'gesturechange']) {
+        document.addEventListener(name, e => e.preventDefault(), { passive: false })
+    }
     document.addEventListener('keydown', wake, { capture: true })
     window.addEventListener('pageshow', e => e.persisted && refreshAll())
     window.addEventListener('online', () => refreshAll())

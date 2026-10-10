@@ -6,15 +6,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Tuya Light</title>
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#dbe5f2">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f2137">
+<meta name="theme-color" content="#0f2137">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tuya Light">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- The page draws under the status bar itself; the heading band (navy in both
+     themes, as the widget's) sits behind the clock. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="referrer" content="no-referrer">
 <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
@@ -90,6 +91,9 @@
           </div>
           <span class="row-value" id="temp-value" aria-hidden="true"></span>
         </div>
+
+        <div class="favourites" id="favourites" role="group" data-t-label="favourites"
+             aria-label="Favourite colours" hidden></div>
 
         <div class="scenes" id="scenes" role="group" data-t-label="scenes" aria-label="Scenes"></div>
       </div>
