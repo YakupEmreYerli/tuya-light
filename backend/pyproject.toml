@@ -19,6 +19,7 @@ classifiers = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.2"]
+web = ["segno>=1.5"]  # the phone page itself is stdlib; this adds QR codes for pairing
 test = ["pytest>=7", "mcp>=1.2"]
 
 [project.scripts]
@@ -30,3 +31,6 @@ Issues = "https://github.com/YakupEmreYerli/tuya-light/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+tuya_light = ["static/*"]

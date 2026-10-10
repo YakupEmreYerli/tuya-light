@@ -2,7 +2,10 @@
 
 Everything the outside world sees is in human units: brightness, colour
 temperature, saturation and value are 0-100, hue is 0-360. The raw Tuya
-ranges (10-1000, 0-255, hex colour strings) stay inside this module.
+ranges (10-1000, 0-255, hex colour strings) stay inside the transports:
+``Light`` here for the local network, ``CloudLight`` in cloud.py for Tuya's
+OpenAPI. Both share ``BaseLight``, so brightness, temperature, toggling and
+scenes behave the same over either.
 """
 
 from __future__ import annotations
@@ -83,7 +86,64 @@ def decode_dps(dps: dict) -> dict | None:
     return out
 
 
-class Light:
+class BaseLight:
+    """What every transport offers. A transport implements state(), power(),
+    colour(), white() and close(); the rest is built on those."""
+
+    transport = "?"
+    device: Device
+
+    def state(self) -> State:
+        raise NotImplementedError
+
+    def power(self, on: bool) -> None:
+        raise NotImplementedError
+
+    def colour(self, hue: float, saturation: float, value: float) -> None:
+        raise NotImplementedError
+
+    def white(self, brightness: float, temperature: float) -> None:
+        raise NotImplementedError
+
+    def close(self) -> None:
+        pass
+
+    def _current(self) -> State:
+        """The state a relative change starts from; a transport may answer it
+        from a recent reading."""
+        return self.state()
+
+    def toggle(self) -> None:
+        self.power(not self.state().on)
+
+    def brightness(self, percent: float) -> None:
+        """Dim without changing mode: white stays white, colour keeps its hue."""
+        now = self._current()
+        if now.mode == "colour":
+            self.colour(now.hue, now.saturation, percent)
+        else:
+            self.white(percent, now.temperature)
+
+    def temperature(self, percent: float) -> None:
+        now = self._current()
+        bright = now.brightness if now.mode == "white" else max(now.value, 1)
+        self.white(bright, percent)
+
+    def scene(self, name: str) -> None:
+        self.apply(scene_store.get(name))
+
+    def apply(self, sc: "scene_store.Scene") -> None:
+        if sc.mode == "white":
+            self.white(sc.brightness, sc.temperature)
+        else:
+            self.colour(sc.hue, sc.saturation, sc.brightness)
+
+
+class Light(BaseLight):
+    """A bulb on the local network, through tinytuya and its local key."""
+
+    transport = "local"
+
     def __init__(self, device: Device, timeout: float = 3.0):
         self.device = device
         self.bulb = tinytuya.BulbDevice(
@@ -149,9 +209,6 @@ class Light:
     def power(self, on: bool) -> None:
         self._check(self.bulb.turn_on() if on else self.bulb.turn_off())
 
-    def toggle(self) -> None:
-        self.power(not self.state().on)
-
     def colour(self, hue: float, saturation: float, value: float) -> None:
         h = (_clamp(hue, -100_000, 100_000) % 360) / 360.0
         s = _clamp(saturation, 0, 100) / 100.0
@@ -170,28 +227,6 @@ class Light:
             self._check(self.bulb.set_white_percentage(max(self._min_brightness(), bright), temp))
         except ValueError as err:
             raise LightError(str(err)) from None
-
-    def brightness(self, percent: float) -> None:
-        """Dim without changing mode: white stays white, colour keeps its hue."""
-        now = self.state()
-        if now.mode == "colour":
-            self.colour(now.hue, now.saturation, percent)
-        else:
-            self.white(percent, now.temperature)
-
-    def temperature(self, percent: float) -> None:
-        now = self.state()
-        bright = now.brightness if now.mode == "white" else max(now.value, 1)
-        self.white(bright, percent)
-
-    def scene(self, name: str) -> None:
-        self.apply(scene_store.get(name))
-
-    def apply(self, sc: "scene_store.Scene") -> None:
-        if sc.mode == "white":
-            self.white(sc.brightness, sc.temperature)
-        else:
-            self.colour(sc.hue, sc.saturation, sc.brightness)
 
     def _ensure_on(self) -> None:
         self._check(self.bulb.turn_on())

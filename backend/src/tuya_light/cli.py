@@ -11,9 +11,9 @@ import json
 import math
 import sys
 
-from . import __version__, config
+from . import __version__, backend, config
 from . import scenes as scene_store
-from .light import Light, LightError, State
+from .light import LightError, State
 
 NAMED_COLOURS = {
     "red": 0, "orange": 30, "yellow": 55, "green": 120, "cyan": 180,
@@ -79,14 +79,45 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument("-d", "--device", help="device id or name (default: the first one)")
     p.add_argument("--json", action="store_true", help="machine-readable output")
+    p.add_argument("--transport", choices=config.TRANSPORTS,
+                   help="reach the lights over the local network or through the Tuya cloud "
+                        "(default: per device, else TUYA_LIGHT_TRANSPORT, else local)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("setup", help="fetch local keys from the Tuya cloud (once)")
-    s.add_argument("--region", default="eu", choices=sorted(config_regions()))
+    s.add_argument("--region", choices=sorted(config_regions()),
+                   help="data center of your app account (default: TUYA_REGION, else eu)")
     s.add_argument("--device-id", help="id of any one device on the account")
     s.add_argument("--all", action="store_true", help="keep non-light devices too")
+    s.add_argument("--cloud", action="store_true",
+                   help="set the lights up for the cloud transport (a server away from them)")
 
     sub.add_parser("mcp", help="run the MCP server on stdio (for AI assistants)")
+
+    sv = sub.add_parser("serve", help="serve the phone page from this computer (HTTP)",
+                        description="Serve the phone page. Without an option, runs the server.")
+    sv.add_argument("--host", default="0.0.0.0",
+                    help="address to listen on (default: all; 127.0.0.1 for this computer only)")
+    sv.add_argument("--port", type=int, default=8892, help="port (default 8892)")
+    sv.add_argument("--allow-host", action="append", default=[], metavar="NAME",
+                    help="also answer to this host name, e.g. pc.lan (repeatable)")
+    sv.add_argument("--trust-proxy", action="store_true",
+                    help="behind a reverse proxy: believe its X-Forwarded-Host/Proto/For "
+                         "headers (only if nothing else can reach the port)")
+    sv.add_argument("--cloud-poll", type=int, default=30, metavar="SECONDS",
+                    help="how often an open page asks a cloud light for its state "
+                         "(default 30, at least 10)")
+    once = sv.add_mutually_exclusive_group()
+    once.add_argument("--pair", action="store_true",
+                      help="print the link (and QR code) that pairs a phone, then exit")
+    once.add_argument("--rotate-key", action="store_true",
+                      help="make a new key; every paired phone has to pair again")
+    once.add_argument("--install-service", action="store_true",
+                      help="run the server at login as a systemd user service")
+    once.add_argument("--remove-service", action="store_true",
+                      help="stop the service and remove it")
+    sv.add_argument("--url", help="with --pair: the address the phone uses, "
+                                  "e.g. https://pc.example.ts.net")
     sub.add_parser("devices", help="list configured devices")
     ls = sub.add_parser("scenes", help="list scenes")
     ls.add_argument("--all", action="store_true", help="include hidden ones")
@@ -166,7 +197,7 @@ def _edit_scenes(args: argparse.Namespace) -> int:
 
 
 def config_regions():
-    from .setup import REGIONS
+    from .cloud import REGIONS
 
     return REGIONS
 
@@ -175,12 +206,17 @@ def run(args: argparse.Namespace) -> int:
     if args.cmd == "setup":
         from .setup import run as setup_run
 
-        return setup_run(args.region, args.all, args.device_id)
+        return setup_run(args.region, args.all, args.device_id, args.cloud)
 
     if args.cmd == "mcp":
         from .mcp_server import run as mcp_run
 
         return mcp_run()
+
+    if args.cmd == "serve":
+        from .web import main as web_main
+
+        return web_main(args)
 
     if args.cmd == "scenes":
         rows = [sc.to_json() for sc in scene_store.load(include_hidden=args.all)]
@@ -201,7 +237,7 @@ def run(args: argparse.Namespace) -> int:
               "\n".join(f"{d.name}\t{d.id}\t{d.ip or '-'}" for d in devices))
         return 0
 
-    light = Light(config.pick(devices, args.device))
+    light = backend.open_light(config.pick(devices, args.device))
     try:
         if args.cmd == "on":
             light.power(True)
@@ -254,6 +290,7 @@ def run(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    backend.override = args.transport
     try:
         return run(args)
     except config.ConfigError as err:

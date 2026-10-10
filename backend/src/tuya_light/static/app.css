@@ -1,0 +1,618 @@
+/*
+    SPDX-FileCopyrightText: 2026 Yakup Emre Yerli
+    SPDX-License-Identifier: GPL-2.0-or-later
+
+    The light is the only colour on this page: everything else is the
+    project's navy and greys, and every coloured pixel stands for the bulb.
+*/
+
+:root {
+    color-scheme: light dark;
+    --bg: #eef0f6;
+    --panel: #ffffff;
+    --press: #e4e7f0;
+    --track: #e1e4ee;
+    --edge: rgba(27, 29, 42, 0.1);
+    --ink: #1b1d2a;
+    --ink-2: #4f5470;
+    --ink-3: #6b6f87;
+    --off: #c3c6d4;
+    --knob: #ffffff;
+    --focus: #8a6bff;
+    --lamp: #fff5e0;       /* the bulb's colour, set by app.js */
+    --glow: 0;             /* 0..1, follows brightness */
+    --grip: rgba(27, 29, 42, 0.32);
+    --gutter: 20px;
+    font: 17px/1.35 system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #10111a;
+        --panel: #1b1d2a;
+        --press: #24273a;
+        --track: #252839;
+        --edge: rgba(232, 233, 243, 0.08);
+        --ink: #e8e9f3;
+        --ink-2: #a9adc4;
+        --ink-3: #8a8ea6;
+        --off: #3a3d52;
+        --knob: #e8e9f3;
+    }
+}
+
+html,
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+}
+
+html {
+    touch-action: manipulation; /* no double-tap zoom */
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+button,
+select,
+input {
+    font: inherit;
+    color: inherit;
+}
+
+:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* -- frame ------------------------------------------------------------ */
+
+.app {
+    box-sizing: border-box;
+    max-width: 480px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding:
+        calc(env(safe-area-inset-top) + 10px)
+        calc(env(safe-area-inset-right) + var(--gutter))
+        calc(env(safe-area-inset-bottom) + 16px)
+        calc(env(safe-area-inset-left) + var(--gutter));
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+.name {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.via {
+    margin-left: auto;
+    padding-left: 12px;
+    font-size: 13px;
+    color: var(--ink-3);
+    white-space: nowrap;
+}
+
+.picker-device {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+}
+
+.picker-device select {
+    appearance: none;
+    -webkit-appearance: none;
+    max-width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 28px 0 0;
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    field-sizing: content; /* the chevron follows the name where supported */
+    cursor: pointer;
+}
+
+.picker-device::after { /* a chevron, drawn with two borders */
+    content: "";
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -7px;
+    border-right: 2px solid var(--ink-2);
+    border-bottom: 2px solid var(--ink-2);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+/* -- the lamp: state and the big on/off ----------------------------------- */
+
+.lamp,
+.notice {
+    box-sizing: border-box;
+    min-height: 136px;
+    border-radius: 28px;
+    background: var(--panel);
+}
+
+.lamp {
+    display: grid;
+    grid-template-columns: 68px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin: 0;
+    padding: 16px 18px 16px 16px;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.12s ease-out, background-color 0.12s;
+}
+
+.lamp:active:not(:disabled) {
+    transform: scale(0.985);
+    background: var(--press);
+}
+
+.lamp:disabled {
+    cursor: default;
+}
+
+.bulb {
+    width: 68px;
+    height: 86px;
+    overflow: visible;
+}
+
+.halo-in {
+    stop-color: var(--lamp);
+    stop-opacity: var(--glow);
+}
+
+.halo-out {
+    stop-color: var(--lamp);
+    stop-opacity: 0;
+}
+
+.glass {
+    fill: var(--lamp);
+    transition: fill 0.25s;
+}
+
+.shell {
+    fill: var(--ink);
+}
+
+.base-2 {
+    opacity: 0.7;
+}
+
+.app[data-power="off"] .glass,
+.app[data-conn="loading"] .glass {
+    fill: transparent;
+}
+
+.app[data-power="off"] .halo,
+.app[data-conn="loading"] .halo {
+    visibility: hidden;
+}
+
+.app[data-power="off"] .shell,
+.app[data-conn="loading"] .shell {
+    fill: var(--ink-3);
+}
+
+.lamp-text {
+    min-width: 0;
+}
+
+.lamp-title {
+    display: block;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.lamp-title::first-letter {
+    text-transform: uppercase;
+}
+
+.lamp-detail {
+    display: block;
+    margin-top: 5px;
+    font-size: 15px;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.switch {
+    position: relative;
+    width: 60px;
+    height: 36px;
+    border-radius: 18px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    transition: background-color 0.2s;
+}
+
+.switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--knob);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.app[data-power="on"] .switch {
+    background: var(--lamp);
+}
+
+.app[data-power="on"] .switch-knob {
+    transform: translateX(24px);
+    background: #ffffff;
+}
+
+.app[data-conn="loading"] .switch {
+    visibility: hidden;
+}
+
+/* -- when something is wrong: one message in the lamp's place ------------- */
+
+.notice {
+    padding: 20px 22px 22px;
+}
+
+.notice-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.notice-text {
+    margin: 8px 0 0;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.notice-text code {
+    font: 600 14px/1.4 ui-monospace, "SF Mono", "Noto Sans Mono", monospace;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.notice-detail {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--ink-3);
+    overflow-wrap: anywhere;
+}
+
+.notice-detail:empty {
+    display: none;
+}
+
+.notice-action {
+    min-height: 44px;
+    margin-top: 16px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notice-action:active {
+    opacity: 0.8;
+}
+
+/* -- controls ------------------------------------------------------------- */
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: opacity 0.2s;
+}
+
+.app[data-conn="pc"] .controls,
+.app[data-conn="bulb"] .controls,
+.app[data-conn="error"] .controls,
+.app[data-conn="loading"] .controls {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
+.app[data-conn="unpaired"] .controls,
+.app[data-conn="badkey"] .controls,
+.app[data-conn="setup"] .controls,
+.app[data-conn="refused"] .controls {
+    display: none;
+}
+
+.field-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 0 2px 8px;
+    font-size: 15px;
+    color: var(--ink-2);
+}
+
+.field-value {
+    color: var(--ink);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar {
+    --v: 50;
+    position: relative;
+    height: 52px;
+    border-radius: 16px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    overflow: hidden;
+    touch-action: pan-y; /* sideways drags are ours, vertical ones scroll */
+    cursor: pointer;
+}
+
+.bar-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: max(32px, calc(var(--v) * 1%));
+    border-radius: 16px;
+    background: var(--lamp);
+}
+
+.app[data-power="off"] .bar-fill {
+    background: var(--off);
+}
+
+.bar-grip {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 4px;
+    height: 20px;
+    margin-top: -10px;
+    border-radius: 2px;
+    background: var(--grip);
+}
+
+.bar-temp {
+    /* amber, near-white, pale blue: the same scale as the widget's slider */
+    background: linear-gradient(90deg, #ffb55c, #fff5e0 50%, #cfe3ff);
+}
+
+.bar-thumb {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: clamp(12px, calc(var(--v) * 1%), calc(100% - 12px));
+    width: 8px;
+    margin-left: -4px;
+    border-radius: 4px;
+    background: #ffffff;
+    box-shadow: 0 0 0 1.5px rgba(27, 29, 42, 0.6), 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* In colour mode the white scale has no current value; touching it goes white. */
+.app[data-mode="colour"] .bar-thumb,
+.app[data-mode="scene"] .bar-thumb {
+    visibility: hidden;
+}
+
+/* -- colours -------------------------------------------------------------- */
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    justify-items: center;
+    gap: 4px;
+    padding: 2px 0;
+}
+
+.swatch {
+    position: relative;
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--c, #888);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    cursor: pointer;
+    transition: transform 0.12s ease-out;
+}
+
+.swatch:active {
+    transform: scale(0.92);
+}
+
+.swatch[aria-pressed="true"] {
+    box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink);
+}
+
+.swatch-more {
+    /* a small version of the widget's colour wheel */
+    background:
+        radial-gradient(circle closest-side, #ffffff, rgba(255, 255, 255, 0)),
+        conic-gradient(from 90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+}
+
+.swatch-more input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* -- scenes --------------------------------------------------------------- */
+
+.scenes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.scene {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    min-height: 68px;
+    margin: 0;
+    padding: 12px 12px 12px 14px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--panel);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.12s ease-out, background-color 0.12s;
+}
+
+.scene:active {
+    transform: scale(0.97);
+    background: var(--press);
+}
+
+.scene[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.scene-dot {
+    grid-row: 1 / span 2;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--c, #888);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.scene-label {
+    font-size: 17px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scene-desc::first-letter {
+    text-transform: uppercase;
+}
+
+.scene-desc {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -- Add to Home Screen hint (Safari tab only) ---------------------------- */
+
+.hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: auto 0 0;
+    padding: 4px 0 4px 2px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ink-3);
+}
+
+.hint-close {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    margin: -6px -10px -6px 0;
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    color: var(--ink-3);
+    cursor: pointer;
+}
+
+@media (max-height: 700px) {
+    .app { gap: 14px; }
+    .lamp, .notice { min-height: 112px; }
+    .lamp-title { font-size: 24px; }
+    .bar { height: 46px; }
+    .scene { min-height: 58px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition: none !important;
+    }
+}

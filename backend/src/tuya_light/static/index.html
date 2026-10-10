@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+    SPDX-FileCopyrightText: 2026 Yakup Emre Yerli
+    SPDX-License-Identifier: GPL-2.0-or-later
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tuya Light</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef0f6">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10111a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tuya Light">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/app.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<main class="app" id="app" data-conn="loading" data-power="off" data-mode="white">
+
+  <header class="top">
+    <h1 class="name" id="name">Tuya Light</h1>
+    <label class="picker-device" id="device-wrap" hidden>
+      <span class="visually-hidden" data-t="light">Light</span>
+      <select id="device"></select>
+    </label>
+    <span class="via" id="via" data-t="viaCloud" hidden>Through the Tuya cloud</span>
+  </header>
+
+  <button class="lamp" id="lamp" type="button" role="switch" aria-checked="false" disabled>
+    <svg class="bulb" viewBox="26 14 76 94" aria-hidden="true">
+      <defs>
+        <radialGradient id="halo" cx="64" cy="50" r="38" gradientUnits="userSpaceOnUse">
+          <stop offset="0" class="halo-in"/>
+          <stop offset="1" class="halo-out"/>
+        </radialGradient>
+      </defs>
+      <circle class="halo" cx="64" cy="50" r="38" fill="url(#halo)"/>
+      <path class="glass" d="M64 30a20 20 0 0 1 12 36c-4 3.1-6.6 7.3-7.4 12h-9.2c-.8-4.7-3.4-8.9-7.4-12a20 20 0 0 1 12-36z"/>
+      <path class="shell" fill-rule="evenodd" d="M64 22a28 28 0 0 0-16.8 50.4c2.8 2.1 4.8 5.2 4.8 8.6V82h24v-1c0-3.4 2-6.5 4.8-8.6A28 28 0 0 0 64 22zm0 8a20 20 0 0 1 12 36c-4 3.1-6.6 7.3-7.4 12h-9.2c-.8-4.7-3.4-8.9-7.4-12a20 20 0 0 1 12-36z"/>
+      <rect class="shell" x="52" y="87" width="24" height="7" rx="3.5"/>
+      <rect class="shell base-2" x="56" y="98" width="16" height="6" rx="3"/>
+    </svg>
+    <span class="lamp-text">
+      <span class="lamp-title" id="lamp-title">Tuya Light</span>
+      <span class="lamp-detail" id="lamp-detail"></span>
+    </span>
+    <span class="switch" aria-hidden="true"><span class="switch-knob"></span></span>
+  </button>
+
+  <section class="notice" id="notice" role="status" aria-live="polite" hidden>
+    <h2 class="notice-title" id="notice-title"></h2>
+    <p class="notice-text" id="notice-text"></p>
+    <p class="notice-detail" id="notice-detail"></p>
+    <button class="notice-action" id="retry" type="button" data-t="tryAgain">Try again</button>
+  </section>
+
+  <div class="controls" id="controls">
+    <div class="field">
+      <div class="field-head">
+        <span id="bright-label" data-t="brightness">Brightness</span>
+        <span class="field-value" id="bright-value" aria-hidden="true"></span>
+      </div>
+      <div class="bar bar-bright" id="bright" role="slider" tabindex="0"
+           aria-labelledby="bright-label" aria-valuemin="1" aria-valuemax="100" aria-valuenow="50">
+        <span class="bar-fill"><span class="bar-grip"></span></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head">
+        <span id="temp-label" data-t="white">White light</span>
+        <span class="field-value" id="temp-value" aria-hidden="true"></span>
+      </div>
+      <div class="bar bar-temp" id="temp" role="slider" tabindex="0"
+           aria-labelledby="temp-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <span class="bar-thumb"></span>
+      </div>
+    </div>
+
+    <div class="swatches" id="swatches" role="group" data-t-label="colours" aria-label="Colours">
+      <span class="swatch swatch-more">
+        <input type="color" id="more-colour" data-t-label="moreColours" aria-label="More colours">
+      </span>
+    </div>
+
+    <div class="scenes" id="scenes" role="group" data-t-label="scenes" aria-label="Scenes"></div>
+  </div>
+
+  <p class="hint" id="hint" hidden>
+    <span data-t="addHint">To keep this on your Home Screen, tap Share, then Add to Home Screen.</span>
+    <button class="hint-close" id="hint-close" type="button" data-t-label="dismiss" aria-label="Close">×</button>
+  </p>
+</main>
+</body>
+</html>

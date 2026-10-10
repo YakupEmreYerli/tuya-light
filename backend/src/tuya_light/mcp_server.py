@@ -7,9 +7,10 @@ light's state afterwards, so the assistant can confirm what happened.
 from __future__ import annotations
 
 from . import config
+from .backend import open_light
 from .cli import NAMED_COLOURS, _hex_to_hsv
 from . import scenes as scene_store
-from .light import Light, LightError, State
+from .light import BaseLight, LightError, State
 
 try:  # mcp 2.x
     from mcp.server.mcpserver import MCPServer as FastMCP
@@ -28,7 +29,7 @@ INSTRUCTIONS = (
 )
 
 def _with_light(device: str | None, action) -> dict:
-    light = Light(config.pick(config.load(), device))
+    light = open_light(config.pick(config.load(), device))
     try:
         action(light)
         state = light.state()
@@ -108,7 +109,7 @@ def build_server():
         """Set white light. `brightness` 0-100; `temperature` 0 (warm) to 100
         (cool), left out to keep the current one."""
 
-        def act(light: Light):
+        def act(light: BaseLight):
             temp = light.state().temperature if temperature is None else temperature
             light.white(brightness, temp)
 
@@ -135,7 +136,7 @@ def build_server():
         right now; with from_current=false give mode ("white" or "colour") and its
         values. Saving under an existing label overwrites that scene."""
         if from_current:
-            light = Light(config.pick(config.load(), device))
+            light = open_light(config.pick(config.load(), device))
             try:
                 now = light.state()
             finally:

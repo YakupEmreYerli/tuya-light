@@ -3,6 +3,8 @@
 The file is a JSON list in the same shape tinytuya's own wizard writes
 (``id``, ``name``, ``key``, optionally ``ip`` and ``version``), so a
 ``devices.json`` produced by ``python -m tinytuya wizard`` works as is.
+An entry may also say ``"transport": "cloud"`` (see backend.py); such a
+device needs no local key.
 """
 
 from __future__ import annotations
@@ -19,6 +21,17 @@ from pathlib import Path
 # fwd = ambient, dc = string, tgq/tgkg = dimmers).
 LIGHT_CATEGORIES = {"dj", "dd", "xdd", "fwd", "dc", "tgq", "tgkg", "tyndj", "gyd"}
 
+# How a bulb is reached: "local" (LAN, local key) or "cloud" (Tuya's OpenAPI).
+TRANSPORTS = ("local", "cloud")
+
+
+def default_transport() -> str:
+    """The transport for devices that don't name one: TUYA_LIGHT_TRANSPORT, else local."""
+    value = (os.environ.get("TUYA_LIGHT_TRANSPORT") or "local").strip().lower()
+    if value not in TRANSPORTS:
+        raise ConfigError(f"TUYA_LIGHT_TRANSPORT must be local or cloud, not {value!r}")
+    return value
+
 
 class ConfigError(Exception):
     pass
@@ -31,14 +44,19 @@ class Device:
     key: str
     ip: str | None = None
     version: float = 3.3
+    transport: str | None = None  # None: follow default_transport()
 
     @classmethod
     def from_json(cls, raw: dict) -> "Device":
         try:
-            dev_id, key = raw["id"], raw["key"]
+            dev_id = raw["id"]
         except KeyError as missing:
             raise ConfigError(f"device entry is missing {missing}") from None
-        if not key:
+        transport = raw.get("transport") or None
+        if transport is not None and transport not in TRANSPORTS:
+            raise ConfigError(f"device {dev_id}: transport must be local or cloud, not {transport!r}")
+        key = raw.get("key") or ""
+        if not key and (transport or default_transport()) != "cloud":
             raise ConfigError(f"device {dev_id} has no local key")
         try:
             version = float(raw.get("version") or raw.get("ver") or 3.3)
@@ -52,12 +70,15 @@ class Device:
             key=key,
             ip=raw.get("ip") or None,
             version=version,
+            transport=transport,
         )
 
     def to_json(self) -> dict:
         out = {"id": self.id, "name": self.name, "key": self.key, "version": self.version}
         if self.ip:
             out["ip"] = self.ip
+        if self.transport:
+            out["transport"] = self.transport
         return out
 
 
@@ -69,13 +90,13 @@ def config_path() -> Path:
     return Path(base) / "tuya-light" / "devices.json"
 
 
-def _secure(path: Path) -> None:
+def _secure(path: Path, holds: str = "local keys") -> None:
     """Local keys must not be readable by others. A file we did not write (say,
     tinytuya's wizard output) may be 0644; tighten it and say so."""
     st = path.stat()
     if st.st_uid == os.getuid() and st.st_mode & 0o077:
         os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
-        print(f"tuya-light: {path} was readable by others; it holds local keys, "
+        print(f"tuya-light: {path} was readable by others; it holds {holds}, "
               "so its permissions are now 0600", file=sys.stderr)
 
 
