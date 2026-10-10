@@ -31,6 +31,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+from . import __version__
 from . import scenes as scene_store
 from .config import ConfigError, _secure, config_path, write_private
 
@@ -305,7 +306,10 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def _post(link: dict, path: str, body: dict, timeout: float = TIMEOUT) -> dict:
-    headers = {**(link.get("headers") or {}), **_env_headers(),
+    # urllib's default "Python-urllib" agent is refused outright by some proxies
+    # (Cloudflare's browser check answers 403 before any service token is read).
+    headers = {"User-Agent": f"tuya-light/{__version__}",
+               **(link.get("headers") or {}), **_env_headers(),
                "Authorization": f"Bearer {link['key']}", "Content-Type": "application/json",
                "Accept": "application/json"}
     request = urllib.request.Request(link["url"].rstrip("/") + path, method="POST",

@@ -306,6 +306,7 @@ def test_proxy_headers_are_sent_kept_private_and_never_shown(pc, monkeypatch, ca
         assert sent["cf-access-client-id"] == "id.access"
         assert sent["cf-access-client-secret"] == "very-secret-value"
         assert sent["authorization"] == "Bearer the-pairing-key"
+        assert sent["user-agent"].startswith("tuya-light/")  # proxies refuse Python-urllib
         saved = shared.link_path()
         assert oct(saved.stat().st_mode & 0o777) == "0o600"
         assert json.loads(saved.read_text())["headers"]["CF-Access-Client-Secret"] == "very-secret-value"
