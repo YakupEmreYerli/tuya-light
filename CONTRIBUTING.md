@@ -18,13 +18,19 @@ The tests use a fake bulb, so they run without hardware. To try your change on a
 .venv/bin/pytest backend
 shellcheck install.sh tools/*.sh
 tools/preview.py /tmp/shots        # renders the popup off-screen; look at the PNGs
+.venv/bin/python tools/web-preview.py   # the phone page against pretend bulbs, at 127.0.0.1:8893
+docker build .                     # if you touched the Dockerfile or the package layout
 ```
 
 `tools/preview.py` needs the system PySide6 (the same Qt as Plasma), not one from pip, which ships its own Qt and cannot load Plasma's QML modules.
 
 ## Things worth knowing
 
-- **Human units outside, Tuya units inside.** Everything the CLI, MCP server and widget see is 0-100 (hue 0-360). The raw ranges (10-1000 or 25-255, hex colour strings) never leave `backend/src/tuya_light/light.py`. `decode_dps` handles both bulb generations; if you add a layout, add a test with a real sample.
+- **Human units outside, Tuya units inside.** Everything the CLI, MCP server, widget and phone page see is 0-100 (hue 0-360). The raw ranges (10-1000 or 25-255, hex colour strings, cloud codes) never leave the transports. `decode_dps` (local) and `decode_status` (cloud) handle both bulb generations; if you add a layout, add a test with a real sample.
+- **Two transports, one interface.** `BaseLight` in `light.py` builds brightness, temperature, toggling and scenes on four methods a transport implements: `state`, `power`, `colour`, `white`. `Light` is the local one, `CloudLight` (`cloud.py`) the Tuya OpenAPI one, and `backend.open_light` picks per device. Front ends call `open_light`, never a transport class.
+- **Cloud requests count against a monthly allowance.** Don't add a cloud read where a recent value will do; `test_cloud.py` counts the calls `FakeCloud` receives. Credentials must never reach a message, a log line or an HTTP response.
+- **The phone page has no build step.** `backend/src/tuya_light/static/` is served as it is: plain HTML, CSS and a JavaScript module, its strings in English and Turkish at the top of `app.js`. Icons come from `tools/web-icons.sh`. `tools/web-preview.py` runs the page against pretend bulbs, which is how to look at it (or screenshot it with a browser at phone size).
+- **Every API route goes through `Handler._api`.** That is where the host, cookie and origin checks are. The server serves only the files listed in `STATIC`, and never logs a query string (the pairing key travels in one).
 - **Bulbs push partial updates.** Right after a write, a bulb sends only the data points that changed, and that packet can arrive in place of the status reply. `Light._raw_status` merges replies until the switch point is there. Don't "simplify" that loop away.
 - **One command at a time from the widget.** `Backend.qml` keeps at most one pending command and replaces it with newer ones. Sending every slider step would queue dozens of TCP sessions against a device that handles one at a time.
 - **Scenes belong to the backend.** They live in `scenes.json` and go through `tuya_light/scenes.py`, which stores only differences from the built-ins. The widget edits them by running `tuya-light scene-save/remove/...`; don't copy them into the widget's own settings, or the CLI and MCP server stop seeing the same list.

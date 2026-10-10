@@ -1,7 +1,8 @@
 # Tuya Light — notes for coding agents
 
-Control Tuya Wi-Fi bulbs over the LAN from three front ends that share one core: a KDE Plasma 6 panel widget, the
-`tuya-light` command, and an MCP server. User docs are in `README.md`; the "why it is like this" list is in
+Control Tuya Wi-Fi bulbs from four front ends that share one core: a KDE Plasma 6 panel widget, the `tuya-light`
+command, an MCP server and a phone page (`tuya-light serve`). The core reaches bulbs over the LAN (default) or,
+opt-in, through Tuya's cloud OpenAPI. User docs are in `README.md`; the "why it is like this" list is in
 `CONTRIBUTING.md`. Read both before changing code.
 
 ## Commands
@@ -15,12 +16,18 @@ tools/preview.py /tmp/shots                    # popup rendered off-screen, one 
 tools/preview.py /tmp/shots --config configScenes configAppearance   # settings tabs
 tools/update-translations.sh && tools/build-translations.sh          # after changing i18n() text
 shellcheck install.sh tools/*.sh
+.venv/bin/python tools/web-preview.py --lights 2                     # phone page, pretend bulbs, 127.0.0.1:8893
+tools/web-icons.sh                                                   # after changing docs/brand/logo.svg
+docker build . && docker compose --profile home --profile cloud config --quiet
 ```
 
 ## Layout
 
-- `backend/src/tuya_light/` — `light.py` (one bulb, human units in, Tuya units inside), `scenes.py` (scene store),
-  `config.py` (device list, private atomic writes), `cli.py`, `mcp_server.py`, `setup.py` (cloud key fetch).
+- `backend/src/tuya_light/` — `light.py` (`BaseLight` + local `Light`, human units in, Tuya units inside),
+  `cloud.py` (`CloudLight`, credentials, call-sparing session), `backend.py` (`open_light`, transport precedence),
+  `worker.py` (one command at a time per bulb, latest wins, debounce), `web.py` (phone page server, auth, systemd
+  unit), `static/` (the page, no build step), `scenes.py`, `config.py`, `cli.py`, `mcp_server.py`, `setup.py`.
+- `Dockerfile`, `compose.yaml` — the server in a container (profiles `home` local, `cloud` cloud).
 - `plasma/contents/ui/` — `main.qml`, `Backend.qml` (runs the CLI, one light command at a time), `FullRepresentation`,
   `CompactRepresentation`, `ColorWheel`, `SceneInfo`, and four settings tabs `config*.qml`.
 - `po/` translations, `tools/` previews, banner and translation scripts, `docs/` logo and images.
@@ -29,7 +36,10 @@ shellcheck install.sh tools/*.sh
 
 - Never open windows on the desktop to check the UI: render with `tools/preview.py` (off-screen) and look at the PNGs.
   It needs the system PySide6 (`/usr/bin/python3`), not a pip one.
-- Never write to a real bulb to "try" a change; tests use `FakeBulb`. Reading state is fine.
+- Never write to a real bulb to "try" a change; tests use `FakeBulb` and `FakeCloud`. Reading state is fine.
+- Never call the real Tuya cloud from tests or to "try" something; it spends the owner's monthly allowance.
+- Don't install or start the `tuya-light-serve` service on the dev machine; look at the page with
+  `tools/web-preview.py` (pretend bulbs, temporary config) and a browser at phone size.
 - New widget settings go through the `cfg` property, not `Plasmoid.configuration` directly, so previews keep working.
   Only `configGeneral.qml` declares `cfg_backendCommand` / `cfg_device`.
 - Every command that changes a light prints the resulting state; the widget depends on it.

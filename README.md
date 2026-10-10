@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/YakupEmreYerli/tuya-light/actions/workflows/ci.yml/badge.svg)](https://github.com/YakupEmreYerli/tuya-light/actions/workflows/ci.yml) [![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-1b1d2a)](LICENSE) [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6-ADD5FF?logo=kde&logoColor=white)](https://kde.org/plasma-desktop/) [![MCP](https://img.shields.io/badge/MCP-server-8a6bff)](https://modelcontextprotocol.io)
 
-Control Tuya Wi-Fi bulbs (Smart Life, Tuya Smart, and the many brands built on them) from three places: a KDE Plasma panel widget, a command-line tool, and an MCP server for AI assistants. All three talk to the bulb directly over your local network.
+Control Tuya Wi-Fi bulbs (Smart Life, Tuya Smart, and the many brands built on them) from a KDE Plasma panel widget, a command-line tool, an MCP server for AI assistants, and a page on your phone. By default they all talk to the bulb directly over your local network. For a server that isn't at home there is an opt-in cloud backend that goes through Tuya's own API.
 
 > Türkçe: [README.tr.md](README.tr.md)
 
 ![Tuya Light: the panel popup with a colour wheel, brightness and white temperature sliders, and six scenes](docs/banner.png)
 
-The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb's local key instead, so commands land in a few hundred milliseconds and keep working if the cloud is slow or your developer account's trial has ended. The cloud is needed once, during setup, to fetch that key.
+The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb's local key instead, so commands land in a few hundred milliseconds and keep working if the cloud is slow or your developer account's trial has ended. In local mode the cloud is needed once, during setup, to fetch that key.
 
 ## Features
 
@@ -17,6 +17,8 @@ The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb'
 - **Make it yours.** Choose which popup sections appear and in what order, the wheel size, scene columns and favourite colours; what left click, middle click and the scroll wheel do (open, switch, a scene; brightness, warmth or colour); the panel icon (four shapes, tinted or not, dimmed when off, with the brightness next to it).
 - **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command that touches a bulb prints its resulting state; `--json` makes it machine-readable.
 - **MCP server.** `tuya-light mcp` exposes the same controls as tools, so an assistant such as Claude can answer "make the light warmer" or "movie mode".
+- **Phone page.** `tuya-light serve` puts the same controls on one screen for a phone held in one hand: a big on/off, brightness, warm to cool, colours and your scenes. Add it to the iPhone's Home Screen and it opens like an app. Optional.
+- **Runs where you want.** On your PC, on an always-on box at home (systemd or Docker), or on a rented server through Tuya's cloud API. See [Where it runs](#where-it-runs).
 - **Both bulb generations.** Older bulbs (data points 1-5) and newer ones (20-24) are decoded; protocol versions 3.1 to 3.5 through [tinytuya](https://github.com/jasonacox/tinytuya).
 - **Built-in scenes:** Relax, Reading, Focus, Movie, Night, Party.
 - **Translations:** English, Turkish.
@@ -34,11 +36,89 @@ git clone https://github.com/YakupEmreYerli/tuya-light.git && cd tuya-light
 ./install.sh
 ```
 
-This installs the `tuya-light` command (with the MCP server) through pipx and the widget through `kpackagetool6`, for the current user only. `./install.sh --no-widget` skips the widget, `--no-mcp` leaves out the MCP dependency.
+This installs the `tuya-light` command (with the MCP server) through pipx and the widget through `kpackagetool6`, for the current user only. `./install.sh --no-widget` skips the widget, `--no-mcp` leaves out the MCP dependency, `--web` adds the [phone page](#on-your-phone) and starts it at login.
 
 Then add the widget: right-click the panel → **Add or Manage Widgets** → **Tuya Light**.
 
-To uninstall: `pipx uninstall tuya-light` and `kpackagetool6 -t Plasma/Applet -r com.github.yakupemreyerli.tuyalight`.
+To uninstall: `tuya-light serve --remove-service` (if you added the phone page), `pipx uninstall tuya-light` and `kpackagetool6 -t Plasma/Applet -r com.github.yakupemreyerli.tuyalight`.
+
+Without the widget, straight from git: `pipx install 'tuya-light[web] @ git+https://github.com/YakupEmreYerli/tuya-light#subdirectory=backend'`. The `web` extra only adds QR codes for pairing; the phone page itself needs nothing beyond the standard library, so a widget-only install never pulls in web dependencies.
+
+## Where it runs
+
+| Where | Backend | How |
+| --- | --- | --- |
+| Your PC | local | `./install.sh`, and `--web` for the phone page (a systemd user service) |
+| An always-on box at home | local | `docker compose --profile home up -d`, or pipx and `tuya-light serve --install-service` |
+| A rented server (VDS), no device at home | cloud | `docker compose --profile cloud up -d`, behind a reverse proxy with authentication |
+
+**Local** talks to the bulb on your network with its local key (TCP 6668). After setup nothing goes to the cloud, and it keeps working when Tuya's developer trial has run out.
+
+**Cloud** sends every command to Tuya's servers, which pass it on to the bulb. It needs your own cloud project's Access ID and Secret, and an active IoT Core plan on the Tuya developer platform. The free Trial Edition comes with about 26,000 API calls a month and stops answering once they are used up ([Tuya's pricing page](https://developer.tuya.com/en/docs/iot/membership-service?id=K9m8k45jwvg9j)). See [Cloud backend](#cloud-backend).
+
+Each device follows, strongest first: `tuya-light --transport local|cloud`, `"transport"` in its `devices.json` entry, the `TUYA_LIGHT_TRANSPORT` environment variable, then local.
+
+## On your phone
+
+`tuya-light serve` serves a one-screen page for the phone: a big on/off, brightness, warm to cool, a few colours and a full picker, and your scenes as large buttons. It follows the phone's light or dark mode and shows the light's state as it changes.
+
+![The phone page in light and dark mode: the light's state and an on/off switch at the top, brightness and white-light sliders, colour swatches, and six scenes](docs/screenshots/phone.png)
+
+1. On the PC: `./install.sh --web`. It installs `tuya-light[web]` and a systemd user service, `tuya-light-serve`, that starts at login and restarts if it fails (port 8892, all network interfaces).
+2. `tuya-light serve --pair` prints a link for each address of the PC, your home network and Tailscale (100.x) if you use it, with a QR code for each.
+3. On the iPhone, open the link in Safari, then **Share → Add to Home Screen** (leave **Open as Web App** on). It opens like an app from then on.
+
+The page works at home over Wi-Fi, and away over [Tailscale](https://tailscale.com) when Tailscale is on in the phone. The Tailscale address works in both places, a home-network address only at home. The PC has to be on: if it is off or asleep, the page says it can't reach the computer. (Over plain HTTP the iPhone can't keep a copy of the page, so opening the icon while the PC is off shows Safari's own error.)
+
+**The link is the password.** The key in it is made on first use and kept in `~/.config/tuya-light/web.key` (readable only by you). The phone trades it for a cookie on first visit and the address bar is cleaned. Without that cookie the server answers nothing but the empty page, and it never sends `devices.json`, local keys or cloud credentials. `tuya-light serve --rotate-key` locks out every paired phone; pair them again afterwards (on the iPhone, delete the icon and add it again from the new link). On the home network the page is plain HTTP, like the bulbs' own traffic; over Tailscale it is encrypted.
+
+Managing the service:
+
+```bash
+systemctl --user stop tuya-light-serve              # stop until the next login
+systemctl --user disable --now tuya-light-serve     # stop and don't start at login
+tuya-light serve --remove-service                   # remove it
+journalctl --user -u tuya-light-serve               # logs
+```
+
+Without the service: `tuya-light serve [--host ADDRESS] [--port N]`. If a firewall runs on the PC, allow TCP 8892 from the home network. Opening the page by a name the server doesn't know (say `pc.lan`) gives "this server does not answer to the name"; start it with `--allow-host pc.lan`.
+
+## Cloud backend
+
+For a server away from the bulbs. You need a Tuya cloud project linked to your Smart Life / Tuya app account, and its Access ID and Access Secret: Tuya describes the steps in [Request Tuya Cloud API Key](https://developer.tuya.com/en/docs/developer/apply-cloud-api-key?id=Kff30z8sv62ah) (the same project works for [Getting the local keys](#getting-the-local-keys) below).
+
+```bash
+export TUYA_ACCESS_ID=... TUYA_ACCESS_SECRET=... TUYA_REGION=eu   # eu, us, us-e, weu, in, cn
+tuya-light setup --cloud      # saves the device list with "transport": "cloud"; no LAN scan
+tuya-light --transport cloud state
+```
+
+Credentials are read from `TUYA_ACCESS_ID`, `TUYA_ACCESS_SECRET` and `TUYA_REGION` first, so containers can take them from the environment. If you type them at the `setup --cloud` prompt instead, they are saved to `~/.config/tuya-light/cloud.json` (readable only by you). They are never printed, logged or served by the phone page.
+
+The cloud backend uses Tuya's standard light codes (`switch_led`, `work_mode`, `bright_value_v2`, `temp_value_v2`, `colour_data_v2`, and the older ones without `_v2`) with the ranges the bulb reports, and sends scenes from `scenes.json` as commands. To stay inside the monthly allowance it logs in once per process, works out the state after a command from what was sent, sends a slider's value only where the drag stops, and an open phone page asks for the state every 30 seconds (`tuya-light serve --cloud-poll SECONDS`) and checks once a minute that the bulb is connected. That is about three calls a minute while the page is in use; after five minutes without a touch it stops asking until you touch it again. The widget and the CLI make a few calls per command in cloud mode, so the widget is best left on local.
+
+The Trial Edition has to be renewed on the Tuya developer platform from time to time (**Cloud → Cloud Services → IoT Core → Extend Trial Period**); while it is expired, the cloud backend answers "subscription has expired" and local mode is unaffected.
+
+### Docker
+
+`compose.yaml` has both server setups:
+
+```bash
+# An always-on box at home, local mode (host networking, so it reaches the bulbs)
+docker compose --profile home run --rm -it home setup
+docker compose --profile home up -d --build
+docker compose --profile home exec home tuya-light serve --pair --url http://BOX-ADDRESS:8892
+
+# A rented server, cloud mode: put TUYA_ACCESS_ID, TUYA_ACCESS_SECRET, TUYA_REGION
+# and TUYA_LIGHT_HOST (the public name) in a .env file next to compose.yaml
+docker compose --profile cloud run --rm -it cloud setup --cloud
+docker compose --profile cloud up -d --build
+docker compose --profile cloud exec cloud tuya-light serve --pair --url https://light.example.com
+```
+
+The image runs as an unprivileged user and keeps the device list, scenes and pairing key in the `config` volume.
+
+On a server reachable from the internet, don't publish port 8892 directly. The compose file binds it to 127.0.0.1; put a reverse proxy that adds its own login in front of it, such as [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/) with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/), or Caddy or nginx with authentication. `--trust-proxy` makes the server believe the proxy's `X-Forwarded-Host`, `X-Forwarded-Proto` and `X-Forwarded-For` (the cookie then gets `Secure` over HTTPS); use it only when nothing but the proxy can reach the port. `--allow-host` names the public host the page is opened under.
 
 ## Getting the local keys
 
@@ -79,10 +159,14 @@ tuya-light [-d DEVICE] [--json] COMMAND
 | `scene-hide NAME`, `scene-show NAME` | Hide from lists and the widget, or show again |
 | `scene-reset [NAME]` | Restore built-in scenes to their original form |
 | `devices`, `scenes [--all]` | List what is configured (`--all` includes hidden scenes) |
-| `setup [--region R] [--device-id ID] [--all]` | Fetch local keys from the cloud (once). `--device-id` skips the prompt; `--all` keeps non-light devices too |
+| `setup [--region R] [--device-id ID] [--all] [--cloud]` | Fetch local keys from the cloud (once). `--device-id` skips the prompt; `--all` keeps non-light devices too; `--cloud` sets the lights up for the cloud backend |
 | `mcp` | Run the MCP server on stdio |
+| `serve [--host ADDR] [--port N] [--allow-host NAME] [--trust-proxy] [--cloud-poll S]` | Run the phone page (default all interfaces, port 8892) |
+| `serve --pair [--url URL]` | Print the pairing link and QR code for each address, or for `URL` |
+| `serve --rotate-key` | Make a new key; every paired phone has to pair again |
+| `serve --install-service`, `serve --remove-service` | Start the phone page at login as a systemd user service (with the same options), or remove it |
 
-`-d` takes a device id or name and defaults to the first device. Exit codes: 0 done, 2 the light did not answer, 3 no device list yet.
+`-d` takes a device id or name and defaults to the first device. `--transport local|cloud` overrides how the lights are reached for this run. Exit codes: 0 done, 2 the light did not answer, 3 no device list yet or cloud credentials missing.
 
 Scenes are stored in `~/.config/tuya-light/scenes.json`, which holds only what differs from the built-ins.
 
@@ -133,19 +217,24 @@ Defaults: left click opens the controls, middle click switches the light, scroll
 flowchart LR
     W[Plasma widget] -- runs --> C[tuya-light CLI]
     A[AI assistant] -- MCP stdio --> M[tuya-light mcp]
-    C --> L[core: tuya_light.light]
+    P[Phone] -- HTTP, key cookie --> S2[tuya-light serve]
+    C --> L[core: tuya_light]
     M --> L
-    L -- tinytuya, local key, TCP 6668 --> B((Bulb))
-    S[tuya-light setup] -. once .-> T[(Tuya cloud)]
+    S2 --> L
+    L -- local: tinytuya, local key, TCP 6668 --> B((Bulb))
+    L -. cloud: Tuya OpenAPI, opt-in .-> T[(Tuya cloud)]
+    T -.-> B
+    S[tuya-light setup] -. once .-> T
 ```
 
-The widget has no Python in it: it runs the CLI and reads its one-line JSON answer. While a command is running, newer ones replace each other, so dragging a slider sends the first and the last value instead of a flood.
+The widget has no Python in it: it runs the CLI and reads its one-line JSON answer. While a command is running, newer ones replace each other, so dragging a slider sends the first and the last value instead of a flood. The phone page's server keeps the same rule per bulb, and for cloud bulbs waits until the drag stops.
 
 ```text
-backend/     Python package: core, CLI, MCP server, tests
+backend/     Python package: core (local and cloud), CLI, MCP server, phone page, tests
 plasma/      the Plasma 6 widget (QML)
 po/          translations
-tools/       off-screen renders of the popup and settings, banner, translation scripts
+tools/       off-screen renders, the phone page against pretend bulbs, icons, banner, translation scripts
+Dockerfile, compose.yaml   the server in a container
 ```
 
 ## Troubleshooting
@@ -154,6 +243,9 @@ tools/       off-screen renders of the popup and settings, banner, translation s
 - **"No lights set up yet"**: run `tuya-light setup`.
 - **"subscription has expired" during setup**: extend the free IoT Core trial (see above).
 - **Setup finds 0 devices**: the app account is not linked to the cloud project, or the project's data center differs from the app's region.
+- **The phone can't reach the computer**: the phone must be on the same network as the PC, or have Tailscale on; a firewall on the PC must let TCP 8892 in; and the service must run (`systemctl --user status tuya-light-serve`).
+- **"This phone is not paired yet"**: open the link from `tuya-light serve --pair` on that phone. A Home Screen icon added before a `--rotate-key` has to be deleted and added again.
+- **Cloud: "subscription has expired" or "permission deny"**: renew the IoT Core plan, or check that the app account is still linked to the cloud project and the region matches.
 
 ## Contributing
 
@@ -163,6 +255,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports with the output of `tuya-lig
 
 - [tinytuya](https://github.com/jasonacox/tinytuya) by Jason Cox (MIT) does the Tuya protocol work.
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (MIT).
+- [segno](https://github.com/heuer/segno) (BSD-3-Clause) draws the pairing QR codes, if installed.
 - Icons in the popup come from your Plasma icon theme; the bulb icon and logo are part of this project.
 
 Not affiliated with Tuya Inc. "Tuya" is used only to say which devices this works with.
