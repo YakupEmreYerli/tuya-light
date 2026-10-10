@@ -1,0 +1,7 @@
+# Only backend/ is needed to build the image.
+*
+!backend/
+backend/build/
+backend/**/__pycache__/
+backend/**/*.egg-info/
+backend/.pytest_cache/

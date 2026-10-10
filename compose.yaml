@@ -1,0 +1,60 @@
+# Two ways to run the tuya-light server with Docker Compose. Pick one:
+#
+#   docker compose --profile home up -d --build
+#       An always-on box on the same network as the bulbs. Local mode: commands
+#       go straight to the bulbs, no cloud. Host networking lets the server
+#       reach the bulbs and lets `setup` find them with a LAN broadcast.
+#
+#   docker compose --profile cloud up -d --build
+#       Any server, for example a VDS. Cloud mode: commands go through Tuya's
+#       servers with your own Access ID and Secret (put them in a .env file
+#       next to this one). The port is bound to 127.0.0.1 only; put a reverse
+#       proxy with authentication in front of it (see the README).
+#
+# Device list, scenes and the pairing key live in the `config` volume:
+#   docker compose --profile home run --rm -it home setup
+#   docker compose --profile cloud run --rm -it cloud setup --cloud
+#   docker compose --profile home exec home tuya-light serve --pair
+
+services:
+  home:
+    profiles: [home]
+    build: .
+    image: tuya-light:local
+    network_mode: host
+    command: ["serve", "--host", "0.0.0.0", "--port", "8892"]
+    volumes:
+      - config:/config
+    restart: unless-stopped
+
+  cloud:
+    profiles: [cloud]
+    build: .
+    image: tuya-light:local
+    environment:
+      TUYA_LIGHT_TRANSPORT: cloud
+      TUYA_ACCESS_ID: ${TUYA_ACCESS_ID:-}
+      TUYA_ACCESS_SECRET: ${TUYA_ACCESS_SECRET:-}
+      TUYA_REGION: ${TUYA_REGION:-}
+    # --trust-proxy: the proxy in front says which address the phone used.
+    # --allow-host: the public name the page is opened under.
+    command: ["serve", "--host", "0.0.0.0", "--port", "8892", "--trust-proxy",
+              "--allow-host", "${TUYA_LIGHT_HOST:-localhost}"]
+    ports:
+      - "127.0.0.1:8892:8892"
+    volumes:
+      - config:/config
+    restart: unless-stopped
+
+  # With Cloudflare Tunnel instead of a proxy on the server, drop `ports:` above,
+  # point the tunnel's public hostname at http://cloud:8892 and uncomment:
+  # tunnel:
+  #   profiles: [cloud]
+  #   image: cloudflare/cloudflared:latest
+  #   command: ["tunnel", "--no-autoupdate", "run"]
+  #   environment:
+  #     TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+  #   restart: unless-stopped
+
+volumes:
+  config:
