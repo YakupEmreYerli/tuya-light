@@ -47,7 +47,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import parse_qs, quote, urlsplit
 
-from . import __version__, config
+from . import __version__, config, shared
 from . import scenes as scene_store
 from .backend import transport_for
 from .config import ConfigError, Device
@@ -59,6 +59,7 @@ COOKIE = "tuya_light"
 COOKIE_MAX_AGE = 400 * 24 * 3600  # the longest browsers keep a cookie
 SERVICE = "tuya-light-serve.service"
 MAX_BODY = 4096
+MAX_SYNC_BODY = 512 * 1024  # a sync from a linked install carries every scene
 STATE_MAX_AGE = 2.0  # several phones polling share one bulb read
 WAIT = 20.0  # longest a request waits for the bulb
 LOCAL_POLL = 4  # seconds between state reads of an open page, local bulbs
@@ -320,7 +321,17 @@ class Handler(BaseHTTPRequestHandler):
         self._json(403, {"error": f"this server does not answer to the name {host!r}; "
                                   f"start it with --allow-host {host}"})
 
+    def _bearer(self) -> bool:
+        """Another tuya-light install (a linked one) sends the key as a bearer
+        token. Browsers never add this header on their own, so such requests
+        need no origin check."""
+        auth = self.headers.get("Authorization", "")
+        scheme, _, token = auth.partition(" ")
+        return scheme.lower() == "bearer" and self.server.keys.matches(token.strip())
+
     def _authed(self) -> bool:
+        if self._bearer():
+            return True
         jar = http.cookies.SimpleCookie()
         try:
             jar.load(self.headers.get("Cookie", ""))
@@ -384,7 +395,10 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
             length = -1
-        if length < 0 or length > MAX_BODY:
+        # Only a paired caller's sync may be large; checked on headers alone,
+        # before reading anything.
+        limit = MAX_SYNC_BODY if url.path == "/api/sync" and self._authed() else MAX_BODY
+        if length < 0 or length > limit:
             self.close_connection = True
             return self._json(413, {"error": "request too large"})
         raw = self.rfile.read(length) if length else b""
@@ -458,7 +472,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authed():
             return self._json(401, {"error": "this phone is not paired", "paired": False})
         if method == "POST":
-            if not self._same_origin():
+            if not self._bearer() and not self._same_origin():
                 return self._json(403, {"error": "changes must come from the page itself"})
             ctype = self.headers.get("Content-Type", "").split(";")[0].strip().lower()
             if ctype != "application/json":
@@ -511,6 +525,7 @@ class Handler(BaseHTTPRequestHandler):
                 worker = self.server.worker(device, self._transport(device))
                 return self._wait(worker.read(STATE_MAX_AGE), worker)
             if path == "/api/devices":
+                shared.maybe_sync(quiet=True)
                 try:
                     devices = config.load()
                 except ConfigError as err:
@@ -520,11 +535,25 @@ class Handler(BaseHTTPRequestHandler):
                                           "transport": self._transport(d)} for d in devices],
                              "default": default}
             if path == "/api/scenes":
+                shared.maybe_sync(quiet=True)  # if this install is linked to another
                 try:
                     return 200, [s.to_json() for s in scene_store.load()]
                 except ConfigError as err:
                     raise BadRequest(500, str(err)) from None
+            if path == "/api/favourites":
+                try:
+                    return 200, {"colours": shared.favourites() or []}
+                except ConfigError as err:
+                    raise BadRequest(500, str(err)) from None
             raise BadRequest(404, "not found")
+
+        if path == "/api/sync":
+            try:
+                return 200, shared.hub_sync(body.get("base", 0), body.get("changes", []))
+            except shared.SyncError as err:
+                raise BadRequest(409, str(err)) from None
+            except ConfigError as err:
+                raise BadRequest(500, str(err)) from None
 
         action = self._action(path, body)
         device = self._device(query)

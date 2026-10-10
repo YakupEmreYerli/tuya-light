@@ -13,7 +13,7 @@ Telefon uygulaması her dokunuşta Tuya'nın bulutuna gider. Tuya Light ise ampu
 ## Neler var
 
 - **Panel bileşeni.** Ampulün o anki rengini alan bir simge. Tıklayınca renk tekerleği, parlaklık çubuğu, sıcaktan soğuğa beyaz ışık çubuğu, favori renkler ve sahneleriniz açılır. Birden fazla ampul varsa üstte seçici çıkar.
-- **Kendi sahneleriniz.** Bileşenin ayarlarından sahne ekleyin, düzenleyin, gizleyin, silin ya da ışığın o anki hâlini sahne olarak kaydedin. Hazır sahneler de düzenlenir ve ilk hâline döner. Komut satırı ve MCP sunucusu aynı listeyi görür.
+- **Kendi sahneleriniz.** Bileşenin ayarlarından sahne ekleyin, düzenleyin, gizleyin, silin ya da ışığın o anki hâlini sahne olarak kaydedin. Hazır sahneler de düzenlenir ve ilk hâline döner. Komut satırı, MCP sunucusu ve telefon sayfası aynı listeyi görür; [bağlı kurulumlar](#ayarları-kurulumlar-arasında-paylaşmak) da onu paylaşır.
 - **İstediğiniz gibi.** Pencerede hangi bölümlerin hangi sırayla görüneceği, teker boyutu, sahne sütunları ve favori renkler; sol tık, orta tık ve fare tekerleğinin ne yapacağı (aç, aç/kapat, bir sahne; parlaklık, sıcaklık ya da renk); panel simgesi (dört şekil, renkli ya da değil, kapalıyken soluk, yanında parlaklık).
 - **Komut satırı.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Ampule dokunan her komut ampulün son durumunu yazar, `--json` ile makinenin okuyacağı biçimde.
 - **MCP sunucusu.** `tuya-light mcp` aynı kontrolleri araç olarak sunar; Claude gibi bir asistana "ışığı biraz ısıt" ya da "film modu" demek yeter.
@@ -62,7 +62,7 @@ Her cihaz için güçlüden zayıfa: `tuya-light --transport local|cloud`, `devi
 
 `tuya-light serve` bileşenin penceresini telefon için tek ekranlık bir sayfa olarak sunar: ışığın adı ve anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları, sahneleriniz. Telefonun açık ya da koyu temasına uyar, ışığın durumunu değiştikçe gösterir.
 
-![Telefon sayfası açık ve koyu temada: üstte ışığın adı ve anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları, üç sütunda altı sahne](docs/screenshots/phone.png)
+![Telefon sayfası açık ve koyu temada: üstte ışığın adı ve anahtarı, renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları, bir sıra favori renk, üç sütunda altı sahne](docs/screenshots/phone.png)
 
 1. Bilgisayarda: `./install.sh --web`. `tuya-light[web]`'i ve `tuya-light-serve` adlı bir systemd kullanıcı servisini kurar; servis oturum açılınca başlar, çökerse yeniden başlar (8892 portu, bütün ağ arayüzleri).
 2. `tuya-light serve --pair` bilgisayarın her adresi için, yani ev ağı ve kullanıyorsanız Tailscale (100.x) için, birer bağlantı ve QR kodu yazar.
@@ -120,6 +120,28 @@ docker compose --profile cloud exec cloud tuya-light serve --pair --url https://
 
 İnternetten erişilen bir sunucuda 8892 portunu doğrudan açmayın. Compose dosyası onu 127.0.0.1'e bağlar; önüne kendi girişini isteyen bir ters vekil sunucu koyun: [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/) ile [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/), ya da kimlik doğrulamalı Caddy veya nginx. `--trust-proxy`, sunucunun vekilin `X-Forwarded-Host`, `X-Forwarded-Proto` ve `X-Forwarded-For` başlıklarına inanmasını sağlar (HTTPS'de çerez `Secure` olur); bunu yalnızca porta vekilden başka hiçbir şey ulaşamıyorsa kullanın. `--allow-host` sayfanın açıldığı genel adı söyler.
 
+## Ayarları kurulumlar arasında paylaşmak
+
+Sahneler, favori renkler ve cihaz adları her yerde aynı olabilir: bilgisayarınızdaki bileşende, evdeki cihazda ya da bulut sunucusunda ve hepsinin telefon sayfasında. Ortak kopyayı tek bir kurulum tutar, `tuya-light serve` çalıştıran kurulum. Diğerlerini ona bir kez, onun yazdığı eşleştirme bağlantısıyla bağlarsınız:
+
+```bash
+tuya-light serve --pair                                  # sunucuyu çalıştıran kurulumda
+tuya-light link 'https://isik.ornek.com/?key=...'        # bilgisayarda ya da başka bir kurulumda
+```
+
+Bundan sonra bağlı kurulum kendi kendine eşitlenir: bir şeyi değiştirdiğiniz anda (bileşende, komut satırında ya da MCP üzerinden) ve sahneleri, favorileri ya da cihazları göstermeden önce, en çok dakikada bir. Her sahne, favori listesi ve her cihazın adı ayrı ayrı eşitlenir; iki taraf da aynı şeyi değiştirdiyse sonraki düzenleme kazanır. Bağlantı yokken her şey son kopyayla çalışmaya devam eder, değişiklikler bir sonraki sefere gider. Bileşenin yerleşim ayarları (pencere bölümleri, teker boyutu, sütunlar, panel simgesi) her bilgisayarda ayrı kalır.
+
+Sunucunun önünde kimlik soran bir vekil sunucu varsa bağlantıya onun başlıklarını da verin, örneğin bir [Cloudflare Access hizmet anahtarı](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/):
+
+```bash
+tuya-light link 'https://isik.ornek.com/?key=...' \
+    --header 'CF-Access-Client-Id: ...' --header 'CF-Access-Client-Secret: ...'
+```
+
+Adres, anahtar ve başlıklar yalnızca sizin okuyabildiğiniz `~/.config/tuya-light/link.json` dosyasında durur; ekrana yazılmaz, günlüğe düşmez. Konteynerde `TUYA_LIGHT_LINK_HEADERS='Ad: değer; Ad: değer'` ortamdan başlık ekler. `--replace-local` bu kurulumun kendi sahnelerini, favorilerini ve adlarını bırakıp birleştirmek yerine ortak olanları alır. `tuya-light sync` hemen eşitler, `tuya-light sync --status` durumu gösterir, `tuya-light unlink` eşitlemeyi bırakır (ayarlar olduğu gibi kalır).
+
+Favori renkler yine bileşenin Görünüm ayarlarından düzenlenir, ama artık onları arka uç tutuyor; bağlı kurulumlar ve telefon sayfası (çubukların altında bir sıra) da görür. Güncellenen bileşen ilk çalıştığında orada özelleştirdiğiniz renkleri devreder, başka bir yerde zaten favori seçilmediyse.
+
 ## Yerel anahtarları almak
 
 Her Tuya ampulü yerel trafiğini yalnızca Tuya bulutunun bildiği, cihaza özel bir anahtarla şifreler. Bu anahtarı bir kez alırsınız:
@@ -165,6 +187,10 @@ tuya-light [-d CİHAZ] [--json] KOMUT
 | `serve --pair [--url URL]` | Her adres için, ya da `URL` için, eşleştirme bağlantısını ve QR kodunu yazar |
 | `serve --rotate-key` | Yeni anahtar üretir; eşleşmiş her telefonun yeniden eşleşmesi gerekir |
 | `serve --install-service`, `serve --remove-service` | Telefon sayfasını aynı seçeneklerle systemd kullanıcı servisi olarak oturum açılınca başlatır, ya da kaldırır |
+| `favourites`, `favourites-set [--if-unset] [RENK ...]` | Favori renkleri listeler ya da değiştirir (renk verilmezse favori kalmaz) |
+| `rename CİHAZ [AD]` | Cihaza her yerde görünecek bir ad verir; AD verilmezse kendi adına döner |
+| `link EŞLEŞTİRME-BAĞLANTISI [--header 'AD: DEĞER'] [--replace-local]` | Sahneleri, favorileri ve adları `serve` çalıştıran kurulumla paylaşır |
+| `sync [--status]`, `unlink` | Hemen eşitler (ya da durumu gösterir); eşitlemeyi bırakır |
 
 `-d` cihaz kimliği ya da adı alır, verilmezse listedeki ilk cihaz. `--transport local|cloud` o çalıştırma için ışıklara nasıl ulaşılacağını değiştirir. Çıkış kodları: 0 tamam, 2 ışık cevap vermedi, 3 cihaz listesi yok ya da bulut bilgileri eksik.
 

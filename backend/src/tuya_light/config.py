@@ -14,7 +14,7 @@ import os
 import stat
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 # Tuya product categories that are lights (dj = bulb, dd = strip, xdd = ceiling,
@@ -113,7 +113,15 @@ def load(path: Path | None = None) -> list[Device]:
         raise ConfigError(f"cannot read {path}: {err}") from None
     if not isinstance(raw, list) or not all(isinstance(e, dict) for e in raw):
         raise ConfigError(f"{path} must contain a JSON list of devices")
-    return [Device.from_json(entry) for entry in raw]
+    devices = [Device.from_json(entry) for entry in raw]
+    # Display names chosen with `tuya-light rename` (shared between linked installs).
+    from .shared import device_names
+
+    try:
+        names = device_names()
+    except ConfigError:
+        names = {}
+    return [replace(d, name=names[d.id]) if d.id in names else d for d in devices]
 
 
 def write_private(path: Path, text: str, mode: int = 0o600) -> None:

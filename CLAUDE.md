@@ -26,7 +26,8 @@ docker build . && docker compose --profile home --profile cloud config --quiet
 - `backend/src/tuya_light/` — `light.py` (`BaseLight` + local `Light`, human units in, Tuya units inside),
   `cloud.py` (`CloudLight`, credentials, call-sparing session), `backend.py` (`open_light`, transport precedence),
   `worker.py` (one command at a time per bulb, latest wins, debounce), `web.py` (phone page server, auth, systemd
-  unit), `static/` (the page, no build step), `scenes.py`, `config.py`, `cli.py`, `mcp_server.py`, `setup.py`.
+  unit), `static/` (the page, no build step), `shared.py` (scenes/favourites/names shared between linked
+  installs), `scenes.py`, `config.py`, `cli.py`, `mcp_server.py`, `setup.py`.
 - `Dockerfile`, `compose.yaml` — the server in a container (profiles `home` local, `cloud` cloud).
 - `plasma/contents/ui/` — `main.qml`, `Backend.qml` (runs the CLI, one light command at a time), `FullRepresentation`,
   `CompactRepresentation`, `ColorWheel`, `SceneInfo`, and four settings tabs `config*.qml`.
@@ -39,7 +40,9 @@ docker build . && docker compose --profile home --profile cloud config --quiet
 - Never write to a real bulb to "try" a change; tests use `FakeBulb` and `FakeCloud`. Reading state is fine.
 - Never call the real Tuya cloud from tests or to "try" something; it spends the owner's monthly allowance.
 - Don't install or start the `tuya-light-serve` service on the dev machine; look at the page with
-  `tools/web-preview.py` (pretend bulbs, temporary config) and a browser at phone size.
+  `tools/web-preview.py` (pretend bulbs, temporary config) and a browser at phone size, with the safe areas set
+  through `--safe-top` / `--safe-bottom` on the root element (the page's CSP blocks injected style tags).
+- Don't `tuya-light link` the dev machine to anything real; `test_shared.py` covers sync with two fake installs.
 - New widget settings go through the `cfg` property, not `Plasmoid.configuration` directly, so previews keep working.
   Only `configGeneral.qml` declares `cfg_backendCommand` / `cfg_device`.
 - Every command that changes a light prints the resulting state; the widget depends on it.

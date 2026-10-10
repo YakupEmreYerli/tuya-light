@@ -6,7 +6,7 @@ light's state afterwards, so the assistant can confirm what happened.
 
 from __future__ import annotations
 
-from . import config
+from . import config, shared
 from .backend import open_light
 from .cli import NAMED_COLOURS, _hex_to_hsv
 from . import scenes as scene_store
@@ -56,6 +56,7 @@ def build_server():
     @server.tool()
     def list_scenes() -> list[dict]:
         """List the user's scenes (built-in and their own), with their settings."""
+        shared.maybe_sync(quiet=True)
         return [sc.to_json() for sc in scene_store.load()]
 
     @server.tool()
@@ -144,19 +145,25 @@ def build_server():
             if not now.online:
                 raise ValueError(f"the light did not answer: {now.error}")
             if now.mode == "colour":
-                return scene_store.save(label, "colour", hue=now.hue, saturation=now.saturation,
-                                        brightness=now.value).to_json()
-            return scene_store.save(label, "white", temperature=now.temperature,
-                                    brightness=now.brightness).to_json()
-        if mode not in ("white", "colour"):
+                saved = scene_store.save(label, "colour", hue=now.hue, saturation=now.saturation,
+                                         brightness=now.value)
+            else:
+                saved = scene_store.save(label, "white", temperature=now.temperature,
+                                         brightness=now.brightness)
+        elif mode not in ("white", "colour"):
             raise ValueError("mode must be white or colour")
-        return scene_store.save(label, mode, brightness=brightness, temperature=temperature,
-                                hue=hue, saturation=saturation).to_json()
+        else:
+            saved = scene_store.save(label, mode, brightness=brightness, temperature=temperature,
+                                     hue=hue, saturation=saturation)
+        shared.maybe_sync(force=True, quiet=True)
+        return saved.to_json()
 
     @server.tool()
     def remove_scene(scene: str) -> dict:
         """Delete one of the user's scenes; a built-in one is hidden instead."""
-        return {"scene": scene, "result": scene_store.remove(scene)}
+        result = scene_store.remove(scene)
+        shared.maybe_sync(force=True, quiet=True)
+        return {"scene": scene, "result": result}
 
     return server
 

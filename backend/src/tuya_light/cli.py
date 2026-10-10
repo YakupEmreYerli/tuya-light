@@ -11,7 +11,7 @@ import json
 import math
 import sys
 
-from . import __version__, backend, config
+from . import __version__, backend, config, shared
 from . import scenes as scene_store
 from .light import LightError, State
 
@@ -162,6 +162,34 @@ def build_parser() -> argparse.ArgumentParser:
         x.add_argument("name")
     sr = sub.add_parser("scene-reset", help="restore built-in scenes to their original form")
     sr.add_argument("name", nargs="?", help="one scene (default: all built-ins)")
+
+    sub.add_parser("favourites", aliases=["favorites"], help="list the favourite colours")
+    fs = sub.add_parser("favourites-set", aliases=["favorites-set"],
+                        help="replace the favourite colours (none given: no favourites)")
+    fs.add_argument("colours", nargs="*", metavar="COLOUR", help="a colour name or #rrggbb")
+    fs.add_argument("--if-unset", action="store_true",
+                    help="only if no favourites were ever chosen (used by the widget once)")
+
+    rn = sub.add_parser("rename", help="give a device a display name (none given: its own name)")
+    rn.add_argument("target", metavar="DEVICE", help="device id or current name")
+    rn.add_argument("new_name", nargs="?", metavar="NAME")
+
+    ln = sub.add_parser("link", help="share scenes, favourites and names with the install "
+                                     "that runs `tuya-light serve`",
+                        description="Link this install to another one that runs `tuya-light "
+                                    "serve`. Give the pairing link `tuya-light serve --pair` "
+                                    "prints there. Scenes, favourite colours and device names "
+                                    "then stay the same on both; when both changed the same "
+                                    "thing, the later edit wins.")
+    ln.add_argument("url", metavar="PAIRING-LINK")
+    ln.add_argument("--header", action="append", default=[], metavar="'NAME: VALUE'",
+                    help="send this header too, e.g. a Cloudflare Access service token "
+                         "(CF-Access-Client-Id, CF-Access-Client-Secret); kept 0600")
+    ln.add_argument("--replace-local", action="store_true",
+                    help="drop this install's own scenes, favourites and names, take the other's")
+    sub.add_parser("unlink", help="stop syncing (keeps the current settings)")
+    sy = sub.add_parser("sync", help="sync shared settings with the linked install now")
+    sy.add_argument("--status", action="store_true", help="only show the link's state")
     return p
 
 
@@ -196,6 +224,65 @@ def _edit_scenes(args: argparse.Namespace) -> int:
     return 0
 
 
+def _shared(args: argparse.Namespace) -> int:
+    as_json = args.json
+    if args.cmd == "link":
+        try:
+            result = shared.link(args.url, shared.parse_headers(args.header), args.replace_local)
+        except shared.SyncError as err:
+            raise config.ConfigError(f"could not link: {err}") from None
+        print(json.dumps(result) if as_json else
+              f"Linked to {result['server']}: sent {result['pushed']} change(s), "
+              f"{result['pulled']} came back. Scenes, favourite colours and device names now "
+              "stay in step; `tuya-light unlink` stops it.")
+        return 0
+    if args.cmd == "unlink":
+        gone = shared.unlink()
+        print(json.dumps({"unlinked": gone}) if as_json else
+              ("Unlinked; the settings stay as they are." if gone else "Not linked."))
+        return 0
+    if args.cmd == "sync":
+        if args.status:
+            print(json.dumps(shared.status()))
+            return 0
+        try:
+            result = shared.sync()
+        except shared.SyncError as err:
+            print(json.dumps({"error": str(err)}) if as_json else f"tuya-light: {err}",
+                  file=sys.stdout if as_json else sys.stderr)
+            return 2
+        print(json.dumps(result) if as_json else
+              f"Synced with {result['server']}: sent {result['pushed']}, "
+              f"{result['pulled']} came back.")
+        return 0
+    if args.cmd in ("favourites", "favorites"):
+        shared.maybe_sync(quiet=as_json)
+        found = shared.favourites()
+        print(json.dumps(found) if as_json else "\n".join(found or []) or "(none)")
+        return 0
+    if args.cmd in ("favourites-set", "favorites-set"):
+        colours = []
+        for spec in args.colours:
+            if spec.lower() in NAMED_COLOURS:
+                import colorsys
+
+                r, g, b = colorsys.hsv_to_rgb(NAMED_COLOURS[spec.lower()] / 360, 1, 1)
+                spec = "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+            colours.append(spec)
+        found = shared.set_favourites(colours, if_unset=args.if_unset)
+        shared.maybe_sync(force=True, quiet=as_json)
+        print(json.dumps(found) if as_json else "\n".join(found or []) or "(none)")
+        return 0
+    # rename
+    device = config.pick(config.load(), args.target)
+    shared.set_device_name(device.id, args.new_name)
+    shared.maybe_sync(force=True, quiet=as_json)
+    renamed = config.pick(config.load(), device.id)
+    print(json.dumps({"id": renamed.id, "name": renamed.name}) if as_json else
+          f"{renamed.id}: {renamed.name}")
+    return 0
+
+
 def config_regions():
     from .cloud import REGIONS
 
@@ -218,6 +305,13 @@ def run(args: argparse.Namespace) -> int:
 
         return web_main(args)
 
+    if args.cmd in ("link", "unlink", "sync", "favourites", "favorites", "favourites-set",
+                    "favorites-set", "rename"):
+        return _shared(args)
+
+    if args.cmd in ("scenes", "scene", "devices"):
+        shared.maybe_sync(quiet=args.json)
+
     if args.cmd == "scenes":
         rows = [sc.to_json() for sc in scene_store.load(include_hidden=args.all)]
         print(json.dumps(rows, ensure_ascii=False) if args.json else
@@ -228,7 +322,9 @@ def run(args: argparse.Namespace) -> int:
     if args.cmd in ("scene-remove", "scene-hide", "scene-show", "scene-reset") or (
         args.cmd == "scene-save" and not args.current
     ):
-        return _edit_scenes(args)
+        code = _edit_scenes(args)
+        shared.maybe_sync(force=True, quiet=args.json)  # send the change on
+        return code
 
     devices = config.load()
     if args.cmd == "devices":
@@ -277,6 +373,7 @@ def run(args: argparse.Namespace) -> int:
                                          temperature=now.temperature,
                                          brightness=bright if bright is not None else now.brightness)
             _print_scene(saved, args.json)
+            shared.maybe_sync(force=True, quiet=args.json)
             return 0
         state = light.state()
     except LightError as err:

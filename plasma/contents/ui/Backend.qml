@@ -21,6 +21,10 @@ Item {
     property var devices: []
     property var scenes: []        // visible scenes, as `tuya-light scenes --json`
     property var allScenes: []     // including hidden ones
+    // Favourite colours shared through the backend (and with linked installs);
+    // null while unknown or when none were ever chosen.
+    property var favourites: null
+    property bool favouritesKnown: false
     property bool busy: false
     property bool loaded: false
     property bool needsSetup: false
@@ -71,6 +75,16 @@ Item {
         _run(command + " --json scenes --all", { kind: "scenes" })
     }
 
+    function listFavourites() {
+        _run(command + " --json favourites", { kind: "favourites" })
+    }
+
+    // ifUnset: only when none were ever chosen (handing over the widget's own list).
+    function setFavourites(colours, ifUnset) {
+        const args = (ifUnset ? " --if-unset" : "") + colours.map(c => " " + quote(c)).join("")
+        _run(command + " --json favourites-set" + args, { kind: "favourites" })
+    }
+
     // Anything else (scene edits): callback(ok, parsedJson, stderr).
     function call(args, callback) {
         _run(_base() + " " + args, { kind: "call", callback: callback })
@@ -110,6 +124,13 @@ Item {
 
         if (job.kind === "devices") {
             devices = Array.isArray(parsed) ? parsed : []
+            return
+        }
+        if (job.kind === "favourites") {
+            if (code === 0) {
+                favourites = Array.isArray(parsed) ? parsed : null
+                favouritesKnown = true
+            }
             return
         }
         if (job.kind === "scenes") {

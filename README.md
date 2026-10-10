@@ -13,7 +13,7 @@ The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb'
 ## Features
 
 - **Panel widget.** A bulb icon that takes the light's current colour. Click for a colour wheel, a brightness slider, a warm-to-cool white slider, favourite colours and your scenes. Several bulbs get a picker at the top.
-- **Your own scenes.** Create, edit, hide and delete scenes in the widget's settings, or save whatever the light shows right now. Built-in ones can be edited and restored. The command line and the MCP server see the same list.
+- **Your own scenes.** Create, edit, hide and delete scenes in the widget's settings, or save whatever the light shows right now. Built-in ones can be edited and restored. The command line, the MCP server and the phone page see the same list, and [linked installs](#sharing-settings-between-installs) share it.
 - **Make it yours.** Choose which popup sections appear and in what order, the wheel size, scene columns and favourite colours; what left click, middle click and the scroll wheel do (open, switch, a scene; brightness, warmth or colour); the panel icon (four shapes, tinted or not, dimmed when off, with the brightness next to it).
 - **Command line.** `tuya-light on`, `colour purple`, `colour '#ff8800'`, `white 60 20`, `brightness 30`, `scene movie`. Every command that touches a bulb prints its resulting state; `--json` makes it machine-readable.
 - **MCP server.** `tuya-light mcp` exposes the same controls as tools, so an assistant such as Claude can answer "make the light warmer" or "movie mode".
@@ -62,7 +62,7 @@ Each device follows, strongest first: `tuya-light --transport local|cloud`, `"tr
 
 `tuya-light serve` serves the widget's popup as a one-screen page for the phone: the light's name and switch, the colour wheel, the brightness and white temperature sliders, and your scenes. It follows the phone's light or dark mode and shows the light's state as it changes.
 
-![The phone page in light and dark mode: the light's name and switch at the top, the colour wheel, brightness and white temperature sliders, and six scenes in three columns](docs/screenshots/phone.png)
+![The phone page in light and dark mode: the light's name and switch at the top, the colour wheel, brightness and white temperature sliders, a row of favourite colours, and six scenes in three columns](docs/screenshots/phone.png)
 
 1. On the PC: `./install.sh --web`. It installs `tuya-light[web]` and a systemd user service, `tuya-light-serve`, that starts at login and restarts if it fails (port 8892, all network interfaces).
 2. `tuya-light serve --pair` prints a link for each address of the PC, your home network and Tailscale (100.x) if you use it, with a QR code for each.
@@ -120,6 +120,28 @@ The image runs as an unprivileged user and keeps the device list, scenes and pai
 
 On a server reachable from the internet, don't publish port 8892 directly. The compose file binds it to 127.0.0.1; put a reverse proxy that adds its own login in front of it, such as [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/) with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/), or Caddy or nginx with authentication. `--trust-proxy` makes the server believe the proxy's `X-Forwarded-Host`, `X-Forwarded-Proto` and `X-Forwarded-For` (the cookie then gets `Secure` over HTTPS); use it only when nothing but the proxy can reach the port. `--allow-host` names the public host the page is opened under.
 
+## Sharing settings between installs
+
+Scenes, favourite colours and device names can be the same everywhere: in the widget on your PC, on a box at home or a cloud server, and on the phone page of each. One install holds the shared copy, the one that runs `tuya-light serve`; link every other install to it once, with the pairing link it prints:
+
+```bash
+tuya-light serve --pair                                  # on the install that runs the server
+tuya-light link 'https://lights.example.com/?key=...'    # on the PC, or any other install
+```
+
+From then on a linked install syncs by itself: right after you change something (in the widget, with the command line or through MCP), and before it shows scenes, favourites or devices, at most once a minute. Each scene, the favourites list and each device's name sync on their own; when both sides changed the same one, the later edit wins. Without a connection everything keeps working from the last copy, and the changes go up the next time. The widget's layout settings (popup sections, wheel size, columns, panel icon) stay on each PC.
+
+If the server sits behind an authenticating proxy, give the link the proxy's headers too, for example a [Cloudflare Access service token](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/):
+
+```bash
+tuya-light link 'https://lights.example.com/?key=...' \
+    --header 'CF-Access-Client-Id: ...' --header 'CF-Access-Client-Secret: ...'
+```
+
+The address, the key and the headers are kept in `~/.config/tuya-light/link.json`, readable only by you, and never printed or logged. In a container, `TUYA_LIGHT_LINK_HEADERS='Name: value; Name: value'` adds headers from the environment. `--replace-local` drops this install's own scenes, favourites and names and takes the shared ones instead of merging. `tuya-light sync` syncs now, `tuya-light sync --status` shows how it stands, and `tuya-light unlink` stops it (the settings stay as they are).
+
+Favourite colours are still edited in the widget's Appearance settings, but the backend keeps them now, so linked installs and the phone page (a row under the sliders) see them too. The first time the updated widget runs, colours you had customised there are handed over, unless favourites were already chosen somewhere else.
+
 ## Getting the local keys
 
 Every Tuya bulb encrypts its local traffic with a per-device key that only the Tuya cloud knows. You fetch it once:
@@ -165,6 +187,10 @@ tuya-light [-d DEVICE] [--json] COMMAND
 | `serve --pair [--url URL]` | Print the pairing link and QR code for each address, or for `URL` |
 | `serve --rotate-key` | Make a new key; every paired phone has to pair again |
 | `serve --install-service`, `serve --remove-service` | Start the phone page at login as a systemd user service (with the same options), or remove it |
+| `favourites`, `favourites-set [--if-unset] [COLOUR ...]` | List or replace the favourite colours (none given: no favourites) |
+| `rename DEVICE [NAME]` | Give a device a display name everywhere; without NAME, back to its own name |
+| `link PAIRING-LINK [--header 'NAME: VALUE'] [--replace-local]` | Share scenes, favourites and names with the install that runs `serve` |
+| `sync [--status]`, `unlink` | Sync now (or show the state); stop syncing |
 
 `-d` takes a device id or name and defaults to the first device. `--transport local|cloud` overrides how the lights are reached for this run. Exit codes: 0 done, 2 the light did not answer, 3 no device list yet or cloud credentials missing.
 

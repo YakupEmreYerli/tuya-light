@@ -326,14 +326,14 @@ def test_cli_rotate_key(env, capsys):
 def test_addresses_skip_bridges_and_vpn_tunnels():
     sample = [
         {"ifname": "lo", "addr_info": [{"family": "inet", "local": "127.0.0.1"}]},
-        {"ifname": "eno1", "addr_info": [{"family": "inet", "local": "192.168.1.125"}]},
+        {"ifname": "eno1", "addr_info": [{"family": "inet", "local": "192.168.1.20"}]},
         {"ifname": "virbr0", "addr_info": [{"family": "inet", "local": "192.168.122.1"}]},
-        {"ifname": "tailscale0", "addr_info": [{"family": "inet", "local": "100.77.1.2"}]},
+        {"ifname": "tailscale0", "addr_info": [{"family": "inet", "local": "100.64.1.2"}]},
         {"ifname": "docker0", "addr_info": [{"family": "inet", "local": "172.17.0.1"}]},
         {"ifname": "CloudflareWARP", "addr_info": [{"family": "inet", "local": "172.16.0.2"}]},
     ]
     found = web.parse_addresses(sample, is_physical=lambda name: name == "eno1")
-    assert found == [("Tailscale", "100.77.1.2"), ("Home network (eno1)", "192.168.1.125")]
+    assert found == [("Tailscale", "100.64.1.2"), ("Home network (eno1)", "192.168.1.20")]
 
 
 # -- the systemd user service -------------------------------------------------
@@ -484,3 +484,37 @@ def test_trusted_proxy_gives_host_scheme_and_secure_cookie(proxied):
                         origin="http://127.0.0.1:8892")[0].status == 403
     bad = dict(fwd, **{"X-Forwarded-Host": "evil.example"})
     assert proxied.get("/api/state", headers=bad)[0].status == 403
+
+
+# -- linked installs ---------------------------------------------------------------
+
+
+def test_a_linked_install_syncs_with_the_key_as_a_bearer_token(client, env):
+    tmp, _ = env
+    token = {"Authorization": f"Bearer {client.key}"}
+    change = {"base": 0, "changes": [{"key": "favourites", "value": ["#FF0000"], "stamp": 1}]}
+    res, body = client.post("/api/sync", change, cookie=False, origin=None, headers=token)
+    assert res.status == 200 and body["items"]["favourites"] == ["#ff0000"]
+    assert client.get("/api/favourites")[1] == {"colours": ["#ff0000"]}
+    # no browser sends this header by itself, so no origin is needed; the key is
+    assert client.post("/api/sync", change, cookie=False, origin=None,
+                       headers={"Authorization": "Bearer guess"})[0].status == 401
+    assert client.post("/api/sync", change, origin=None)[0].status == 403  # a cookie still is
+    assert client.post("/api/sync", change, cookie=False, origin=None,
+                       headers={**token, "Host": "evil.example"})[0].status == 403
+    # only a paired caller may send a large sync
+    big = {"base": 0, "changes": [
+        {"key": f"scene:s{i}", "value": {"name": f"s{i}", "label": f"Scene {i}", "mode": "white"},
+         "stamp": 1} for i in range(150)]}
+    assert client.post("/api/sync", big, cookie=False, origin=None, headers=token)[0].status == 200
+    assert client.post("/api/sync", big, cookie=False, origin=None)[0].status == 413
+    assert len(client.get("/api/scenes")[1]) == 6 + 150
+    # an install that is itself linked does not act as the shared copy
+    (tmp / "link.json").write_text(json.dumps({"url": "https://x.example", "key": "k",
+                                               "synced_at": time.time()}))
+    res, body = client.post("/api/sync", change, cookie=False, origin=None, headers=token)
+    assert res.status == 409 and "linked" in body["error"]
+
+
+def test_favourites_are_empty_until_chosen(client):
+    assert client.get("/api/favourites")[1] == {"colours": []}

@@ -9,6 +9,10 @@
 - `serve --trust-proxy` and `--allow-host` for running behind a reverse proxy.
 - `Dockerfile` (non-root) and `compose.yaml` with a home-server (local, host network) and a cloud-server profile; CI builds the image.
 - New optional extra `web` (QR codes for pairing).
+- Shared settings: `tuya-light link PAIRING-LINK` links an install to the one running `serve`; scenes, favourite colours and device names then stay the same on both (item by item, the later edit wins, offline from the last copy). `--header` passes an authenticating proxy's headers, such as a Cloudflare Access service token; `sync`, `sync --status` and `unlink` manage it.
+- Favourite colours are kept by the backend (`favourites`, `favourites-set`); the widget hands its customised colours over once and keeps editing them in its settings. The phone page shows them as a row of swatches.
+- `rename DEVICE NAME` gives a device a display name everywhere.
+- The phone page fills the whole screen as a Home Screen app, under the status bar, and never scrolls or zooms; the colour wheel takes the height that is left, so it fits any phone.
 
 ## 0.1.0 — 2026-09-28
 
