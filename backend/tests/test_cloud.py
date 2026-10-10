@@ -293,6 +293,14 @@ def test_offline_bulb_and_cloud_errors(creds):
         light.power(True)
 
 
+def test_connection_check_denied_does_not_hide_a_working_light(creds, monkeypatch):
+    light = CloudLight(dev())
+    light.session._cloud()
+    monkeypatch.setattr(fake(), "getconnectstatus",
+                        lambda d: {"Error": CLOUD_ERR, "Payload": "Error from Tuya Cloud: 'permission deny'"})
+    assert light.state().online
+
+
 def test_instruction_set_falls_back_to_status_codes(creds):
     light = CloudLight(dev())
     light.session._cloud()

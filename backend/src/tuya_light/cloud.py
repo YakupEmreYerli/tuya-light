@@ -330,7 +330,10 @@ class CloudSession:
         cached = self._online.get(dev_id)
         if cached and time.monotonic() - cached[1] < self.ONLINE_EVERY:
             return cached[0]
-        answer = self.call("getconnectstatus", dev_id)
+        try:
+            answer = self.call("getconnectstatus", dev_id)
+        except LightError:
+            answer = True  # a project without this permission still has a working status
         on = answer if isinstance(answer, bool) else True
         self._online[dev_id] = (on, time.monotonic())
         return on
