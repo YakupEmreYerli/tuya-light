@@ -6,6 +6,7 @@ backend, once per state, so screenshots never depend on a real bulb and never
 steal focus on the desktop. Needs the system PySide6 (same Qt as Plasma).
 
     tools/preview.py OUTDIR [--scale 2] [--dark|--light]
+                            [--lang tr]   (texts from po/tr.po, Turkish made-up names)
 """
 
 import argparse
@@ -33,6 +34,45 @@ SCENES = [
     {"name": "night", "label": "Night", "mode": "colour", "brightness": 6, "temperature": 0, "hue": 25, "saturation": 100, "builtin": True, "hidden": False},
     {"name": "sunset", "label": "Sunset", "mode": "colour", "brightness": 70, "temperature": 0, "hue": 18, "saturation": 90, "builtin": False, "hidden": False},
 ]
+
+# Made-up names of the user's own things (bulbs, a scene of their own). No
+# translation catalogue has them, so each language brings its own.
+NAMES = {
+    "en": {"devices": ["Desk lamp", "Ceiling", "Hall"], "sunset": "Sunset"},
+    "tr": {"devices": ["Masa lambası", "Tavan", "Hol"], "sunset": "Gün batımı"},
+}
+
+
+def load_po(path: Path) -> dict:
+    """msgid -> msgstr from a .po file. A plural entry maps its singular and
+    plural msgids to the first and last form; fuzzy entries are left out."""
+    import ast
+
+    table, entry, key, fuzzy = {}, {}, None, False
+
+    def flush():
+        if entry.get("msgid") and not fuzzy:
+            if entry.get("msgstr"):
+                table[entry["msgid"]] = entry["msgstr"]
+            forms = [entry[k] for k in sorted(k for k in entry if k.startswith("msgstr["))]
+            if forms:
+                table[entry["msgid"]] = forms[0]
+                table[entry.get("msgid_plural", "")] = forms[-1]
+
+    for line in path.read_text(encoding="utf-8").splitlines() + [""]:
+        line = line.strip()
+        if not line:
+            flush()
+            entry, key, fuzzy = {}, None, False
+        elif line.startswith("#"):
+            fuzzy = fuzzy or (line.startswith("#,") and "fuzzy" in line)
+        elif line.startswith('"'):
+            entry[key] += ast.literal_eval(line)
+        else:
+            key, value = line.split(" ", 1)
+            entry[key] = ast.literal_eval(value)
+    return table
+
 
 CONFIG = {
     "sections": ["wheel", "brightness", "temperature", "scenes"],
@@ -147,7 +187,17 @@ def main() -> int:
     ap.add_argument("--suffix", default="", help="added to output file names")
     ap.add_argument("--config", nargs="*", default=None, metavar="PAGE",
                     help="render settings pages instead (configAppearance, configBehaviour, ...)")
+    ap.add_argument("--lang", default="en", choices=NAMES,
+                    help="tr: texts from po/tr.po and Turkish made-up names")
     args = ap.parse_args()
+    table = {} if args.lang == "en" else load_po(ROOT / "po" / f"{args.lang}.po")
+    names = NAMES[args.lang]
+    for state in STATES.values():
+        if "name" in state:
+            state["name"] = names["devices"][0]
+    for scene in SCENES:
+        if not scene["builtin"]:
+            scene["label"] = names[scene["name"]]
 
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     os.environ.setdefault("QT_QPA_PLATFORMTHEME", "kde")
@@ -160,7 +210,12 @@ def main() -> int:
     from PySide6.QtQuick import QQuickView
 
     class Ki18n(QObject):
-        """Stands in for KLocalizedContext: English text, %1..%n filled in."""
+        """Stands in for KLocalizedContext: English text, or its translation from
+        po/<lang>.po with --lang, %1..%n filled in."""
+
+        @staticmethod
+        def _tr(text):
+            return table.get(text) or text
 
         @staticmethod
         def _fill(text, *subs):
@@ -174,21 +229,21 @@ def main() -> int:
         @Slot(str, "QVariant", result=str)
         @Slot(str, "QVariant", "QVariant", result=str)
         def i18n(self, text, *subs):
-            return self._fill(text, *subs)
+            return self._fill(self._tr(text), *subs)
 
         @Slot(str, str, result=str)
         @Slot(str, str, "QVariant", result=str)
         def i18nc(self, _ctx, text, *subs):
-            return self._fill(text, *subs)
+            return self._fill(self._tr(text), *subs)
 
         @Slot(str, str, "QVariant", result=str)
         def i18np(self, one, many, n):
-            return self._fill(one if int(n) == 1 else many, n)
+            return self._fill(self._tr(one) if int(n) == 1 else self._tr(many), n)
 
         @Slot(str, str, result=str)
         @Slot(str, str, "QVariant", result=str)
         def i18nd(self, _domain, text, *subs):
-            return self._fill(text, *subs)
+            return self._fill(self._tr(text), *subs)
 
     app = QGuiApplication(sys.argv)
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -196,7 +251,7 @@ def main() -> int:
     wrapper.write_text(WRAPPER % {"ui": UI})
     ki18n = Ki18n()
     devices = [{"id": f"d{i}", "name": n} for i, n in
-               enumerate(["Desk lamp", "Ceiling", "Hall"][: args.devices])]
+               enumerate(names["devices"][: args.devices])]
 
     import json as _json
     cfg = dict(CONFIG)

@@ -6,7 +6,7 @@ Tuya Wi-Fi ampulleri (Smart Life, Tuya Smart ve bu altyapıyı kullanan onlarca 
 
 > English: [README.md](README.md)
 
-![Tuya Light: renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları ile altı sahneli panel penceresi](docs/banner.png)
+![Tuya Light: renk tekerleği, parlaklık ve beyaz ışık sıcaklığı çubukları ile altı sahneli panel penceresi](docs/banner.tr.png)
 
 Telefon uygulaması her dokunuşta Tuya'nın bulutuna gider. Tuya Light ise ampulün yerel anahtarını kullanır: komut birkaç yüz milisaniyede ulaşır, bulut yavaşken ya da geliştirici hesabınızın deneme süresi dolmuşken de çalışır. Yerel modda bulut yalnızca kurulumda, o anahtarı almak için bir kez gerekir.
 

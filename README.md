@@ -6,7 +6,7 @@ Control Tuya Wi-Fi bulbs (Smart Life, Tuya Smart, and the many brands built on t
 
 > Türkçe: [README.tr.md](README.tr.md)
 
-![Tuya Light: the panel popup with a colour wheel, brightness and white temperature sliders, and six scenes](docs/banner.png)
+![Tuya Light: the panel popup with a colour wheel, brightness and white temperature sliders, and six scenes](docs/banner.en.png)
 
 The phone app goes through Tuya's cloud for every tap. Tuya Light uses the bulb's local key instead, so commands land in a few hundred milliseconds and keep working if the cloud is slow or your developer account's trial has ended. In local mode the cloud is needed once, during setup, to fetch that key.
 

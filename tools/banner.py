@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Compose docs/banner.png (1280x640, also the GitHub social preview) from the
-logo and an off-screen render of the popup (tools/preview.py).
+"""Compose docs/banner.<lang>.png (1280x640, the English one is also the GitHub
+social preview) from the logo and an off-screen render of the popup (tools/preview.py).
 
     tools/preview.py docs/screenshots --states colour white
-    tools/banner.py
+    tools/preview.py docs/screenshots --states colour --lang tr --suffix .tr
+    tools/banner.py         # English: docs/banner.en.png
+    tools/banner.py tr      # Turkish: docs/banner.tr.png
 Needs Pillow and cairosvg or rsvg-convert for the logo.
 """
 
+import argparse
 import subprocess
 import tempfile
 from pathlib import Path
@@ -18,6 +21,15 @@ W, H = 1280, 640
 FONT_BOLD = "/usr/share/fonts/noto/NotoSans-Bold.ttf"
 FONT_REG = "/usr/share/fonts/noto/NotoSans-Regular.ttf"
 
+TEXT = {
+    "en": ["Your Tuya Wi-Fi bulbs from the KDE panel,",
+           "the terminal, or an AI assistant.",
+           "Local network only, no cloud round-trips."],
+    "tr": ["Tuya Wi-Fi ampullerinizi KDE panelinden,",
+           "terminalden ya da yapay zekâyla yönetin.",
+           "Buluta gitmeden, doğrudan yerel ağdan."],
+}
+
 
 def logo(size: int) -> Image.Image:
     with tempfile.TemporaryDirectory() as tmp:
@@ -28,6 +40,12 @@ def logo(size: int) -> Image.Image:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("lang", nargs="?", default="en", choices=TEXT)
+    ap.add_argument("--out", type=Path, default=ROOT / "docs", help="output directory")
+    args = ap.parse_args()
+    suffix = "" if args.lang == "en" else f".{args.lang}"
+
     bg = Image.new("RGB", (W, H), "#0c0d15")
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     g = ImageDraw.Draw(glow)
@@ -38,7 +56,7 @@ def main() -> None:
     bg.paste(glow, (0, 0), glow)
 
     # The render already carries Plasma's dialog frame and a transparent margin.
-    shot = Image.open(ROOT / "docs/screenshots/colour.png").convert("RGBA")
+    shot = Image.open(ROOT / f"docs/screenshots/colour{suffix}.png").convert("RGBA")
     shot = shot.crop(shot.getbbox())
     target_h = 580
     shot = shot.resize((round(shot.width * target_h / shot.height), target_h), Image.LANCZOS)
@@ -61,13 +79,11 @@ def main() -> None:
     d = ImageDraw.Draw(bg)
     d.text((88, 290), "Tuya Light", font=ImageFont.truetype(FONT_BOLD, 72), fill="#f2f3fa")
     body = ImageFont.truetype(FONT_REG, 27)
-    lines = ["Your Tuya Wi-Fi bulbs from the KDE panel,",
-             "the terminal, or an AI assistant.",
-             "Local network only, no cloud round-trips."]
-    for i, line in enumerate(lines):
+    for i, line in enumerate(TEXT[args.lang]):
         d.text((90, 392 + i * 40), line, font=body, fill="#a9adc4" if i < 2 else "#7d8199")
 
-    out = ROOT / "docs/banner.png"
+    args.out.mkdir(parents=True, exist_ok=True)
+    out = args.out / f"banner.{args.lang}.png"
     bg.save(out, optimize=True)
     print(out)
 

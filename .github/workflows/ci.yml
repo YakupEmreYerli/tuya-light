@@ -88,7 +88,7 @@ jobs:
           kpackagetool6 --type Plasma/Applet --show com.github.yakupemreyerli.tuyalight
       - name: Files named in the README exist
         run: |
-          for f in docs/banner.png docs/brand/logo.svg docs/screenshots/phone.png install.sh \
+          for f in docs/banner.en.png docs/banner.tr.png docs/brand/logo.svg docs/screenshots/phone.png install.sh \
                    Dockerfile compose.yaml CONTRIBUTING.md LICENSE README.tr.md; do
             test -e "$f" || { echo "missing: $f"; exit 1; }
           done
