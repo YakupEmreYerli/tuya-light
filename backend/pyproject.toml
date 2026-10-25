@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tuya-light"
-version = "0.1.0"
+version = "0.2.0"
 description = "Control Tuya Wi-Fi bulbs over your local network: CLI, MCP server and KDE Plasma widget"
 readme = "README.md"
 license = "GPL-2.0-or-later"

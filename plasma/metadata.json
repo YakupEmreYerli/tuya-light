@@ -16,7 +16,7 @@
         "License": "GPL-2.0-or-later",
         "Name": "Tuya Light",
         "Name[tr]": "Tuya Işık",
-        "Version": "0.1.0",
+        "Version": "0.2.0",
         "Website": "https://github.com/YakupEmreYerli/tuya-light"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
