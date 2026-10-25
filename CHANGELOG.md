@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-25
 
 - Phone page: `tuya-light serve` runs a small web server with the widget's popup as a one-screen phone page (switch, colour wheel, brightness and white temperature sliders, scenes), light and dark, installable on the iPhone's Home Screen. Pair a phone with `serve --pair` (link and QR code per address, home network and Tailscale), lock phones out with `serve --rotate-key`. A random key becomes an HttpOnly, SameSite=Strict cookie; the server checks the host name and the origin and never serves device keys.
 - `serve --install-service` / `--remove-service`: a systemd user service that starts the page at login and restarts it on failure; `./install.sh --web` sets it up and restarts it after upgrades.
